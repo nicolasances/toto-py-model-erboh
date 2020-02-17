@@ -20,4 +20,6 @@ def smoke():
     })
 
 if __name__ == '__main__':
+    print('asd')
     app.run(host='0.0.0.0', port=8080)
+    print('asd2')
