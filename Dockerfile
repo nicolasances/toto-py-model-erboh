@@ -5,6 +5,11 @@ RUN pip install joblib
 RUN pip install pandas
 RUN pip install sklearn
 RUN pip install gunicorn
+RUN pip install toto_pubsub
+RUN pip install toto_logger
+RUN pip install requests
+RUN pip install uuid
+
 
 COPY . /app/
 
