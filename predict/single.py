@@ -14,6 +14,9 @@ from dlg.feature import FeatureEngineering
 from dlg.remote import ExpenseUpdater
 
 tmp_folder = os.environ['TOTO_TMP_FOLDER']
+if not os.path.exists(tmp_folder):
+    os.mkdir(tmp_folder)
+
 base_folder = "{tmp}/erboh".format(tmp=tmp_folder)
 
 # Create the target folder if it does not exist
