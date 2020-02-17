@@ -12,4 +12,6 @@ print('Starting consumer')
 TotoEventConsumer(ms_name, ['erbohBatchInferenceRequested', 'erbohPredictionRequested'], [predict_batch, predict_single])
 
 if __name__ == "__main__":
+    print('about to run')
     app.run()
+    print('running')
