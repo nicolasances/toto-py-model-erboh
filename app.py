@@ -5,6 +5,8 @@ from predict.single import predict as predict_single
 
 def create_app(): 
 
+    print('creating app')
+    
     # Microservice name
     ms_name = 'model-erboh'
 
