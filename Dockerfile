@@ -9,7 +9,7 @@ RUN pip install toto-pubsub-nicolasances
 RUN pip install toto-logger-nicolasances
 RUN pip install requests
 RUN pip install uuid
-
+RUN pip install google-cloud-pubsub
 
 COPY . /app/
 
