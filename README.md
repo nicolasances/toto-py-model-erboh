@@ -10,6 +10,7 @@ It needs the following environment variables:
  * **TOTO_API_AUTH**: API authentication param to be used when authenticating to Toto APIs
  * **TOTO_HOST**: the host where APIs are reachable 
  * **TOTO_TMP_FOLDER**: a folder to store tmp files - This should be set in the Dockerfile
+ * **TOTO_EVENTS_GCP_PROJECT_ID**: the Google Project Id for events in the current environment
 
 ## Predictions
 This model generates predictions in two ways: 
