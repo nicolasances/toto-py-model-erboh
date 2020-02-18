@@ -3,7 +3,7 @@ from toto_pubsub.consumer import TotoEventConsumer
 from predict.batch import predict as predict_batch
 from predict.single import predict as predict_single
 
-print('app:first line)
+print('app:first line')
 
 def create_app(): 
 
