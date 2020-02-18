@@ -49,7 +49,7 @@ class ExpenseUpdater:
         '''
 
         # Load the predictions
-        predictions = pd.read_csv(self.predictions_filename)
+        predictions = pd.read_csv(predictions_filename)
 
         for index, row in predictions.iterrows():
             id = row['id']
