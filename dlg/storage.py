@@ -74,6 +74,11 @@ class FileStorage:
         Calculates and saves the accuracy for the passed dataset. 
         Requires the dataset to provide the following columns: "prediction", "actual"
         '''
+        # Check and correct data types
+        if (data['actual'].dtype != np.float64): 
+            data['actual'] = pd.to_numeric(data['actual'])
+        if (data['prediction'].dtype != np.float64):
+            data['prediction'] = pd.to_numeric(data['prediction'])
 
         # Calculate accuracy
         accuracy = precision_recall_fscore_support(data['actual'], data['prediction'])
@@ -96,6 +101,8 @@ class FileStorage:
 
         # Delete the tmp file
         os.remove(tmp_acc_filename)
+
+        return acc_df
 
     def save(self, new_predictions, user):
         '''
@@ -181,6 +188,50 @@ class FileStorage:
         new_predictions.set_index('id', inplace=True)
 
         self.save(new_predictions=new_predictions, user=user)
+
+    def save_label_and_accuracy(self, label, user): 
+        '''
+        Saves a new label, recalculates accuracy and returns it
+        Requrires "label" to be a dictionnary with: 'id', 'monthly'
+        '''
+        # Load the accuracy into pandas
+        new_actuals = pd.DataFrame(np.array([[label['id'], label['monthly']]]), columns=['id', 'new_actual'])
+        new_actuals.set_index('id', inplace=True)
+
+        # Load the predictions file of this version fo the model
+        pred_obj = self.get_bucket_object(user)
+
+        # If there are no predictions, return
+        if not pred_obj.exists():
+            return None
+
+        # Create a tmp local file to store the predictions downloaded from Storage
+        tmp_filename = self.create_tmp_filename()
+
+        # Save the stored predictions to a tmp file
+        pred_obj.download_to_filename(tmp_filename)
+        
+        # Load in memory
+        predictions = pd.read_csv(tmp_filename)
+        
+        # Apply the new actuals on the old 
+        # Merge the two datasets
+        merged_df = pd.merge(predictions, new_actuals, how='outer', on='id')
+        merged_df.set_index('id', inplace=True)
+        
+        # Update the old prediction when the new is there
+        merged_df.loc[new_actuals.index, 'actual'] = new_actuals['new_actual']
+
+        # Save to file and upload to Storage
+        merged_df[['prediction', 'actual']].to_csv(tmp_filename)
+
+        pred_obj.upload_from_filename(tmp_filename)
+
+        # Delete tmp file
+        os.remove(tmp_filename)
+
+        # Calculate and save accuracy
+        return self.calc_and_save_accuracy(merged_df, user)        
 
 
 
