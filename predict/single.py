@@ -162,7 +162,7 @@ class Predictor:
         # 5. Update the predictions file
         logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
 
-        file_storage.save_prediction(prediction=expense, user=user)
+        file_storage.save_prediction_and_accuracy(prediction=expense, user=user)
 
         logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
 

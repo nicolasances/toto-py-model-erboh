@@ -5,6 +5,7 @@ import uuid
 from google.cloud import storage
 from google.api_core.exceptions import NotFound
 from toto_logger.logger import TotoLogger
+from sklearn.metrics import precision_recall_fscore_support
 
 client = storage.Client.from_service_account_json('/Users/nicolas/Developper/keys/toto-service-account-dev/toto-microservice-dev.json')
 
@@ -58,11 +59,51 @@ class FileStorage:
 
         return pred_obj
 
+    def get_accuracy_bucket_obj(self, user): 
+        '''
+        Returns the blob object corresponding to the file where model
+        accuracy info is saved
+        '''
+        acc_obj_name = '{model}/{version}/accuracy/{user}.accuracy.csv'.format(model=self.model_name, version=self.model_version, user=user)
+        acc_obj = self.bucket.blob(acc_obj_name)
+
+        return acc_obj
+
+    def calc_and_save_accuracy(self, data, user):
+        '''
+        Calculates and saves the accuracy for the passed dataset. 
+        Requires the dataset to provide the following columns: "prediction", "actual"
+        '''
+
+        # Calculate accuracy
+        accuracy = precision_recall_fscore_support(data['actual'], data['prediction'])
+
+        # Prepare data frame and save
+        # This model is mostly interested in :
+        # - Recall on class 1: did I manage to catch all 1s (all actual monthly expenses)
+        # – Precision on class 1: did I manage to not wrongly classify stuff as "monthly"
+        acc_df = pd.DataFrame(accuracy, columns=['Class 0', 'Class 1'], index=['Precision', 'Recall', 'F1', 'Support'])
+
+        # Save the data
+        tmp_acc_filename = self.create_tmp_filename()
+
+        acc_df.to_csv(tmp_acc_filename)
+
+        # Upload the data
+        acc_obj = self.get_accuracy_bucket_obj(user)
+
+        acc_obj.upload_from_filename(tmp_acc_filename)
+
+        # Delete the tmp file
+        os.remove(tmp_acc_filename)
+
     def save(self, new_predictions, user):
         '''
         Method that groups the common logic for both save_prediction() and save_predictions()
 
         Requires new_predictions to be a DataFrame with the following columns: "id", "prediction"
+
+        This also recalculate the accuracy (since the data is all in memory)
         '''
         # Load previous predictions from bucket, if any
         pred_obj = self.get_bucket_object(user)
@@ -81,6 +122,9 @@ class FileStorage:
 
             # Delete the tmp file
             os.remove(tmp_filename)
+
+            # Calculate and save accuracy
+            self.calc_and_save_accuracy(new_predictions, user)
 
         # Otherwise, start updating all the predictions stored on Storage
         else: 
@@ -112,7 +156,10 @@ class FileStorage:
             # Delete tmp file
             os.remove(tmp_filename)
 
-    def save_prediction(self, prediction, user):
+            # Calculate and save accuracy
+            self.calc_and_save_accuracy(merged_df, user)
+
+    def save_prediction_and_accuracy(self, prediction, user):
         '''
         Updates the predictions file with the provided prediction
         '''
@@ -123,7 +170,7 @@ class FileStorage:
 
         self.save(new_predictions=new_predictions, user=user)
 
-    def save_predictions(self, predictions_filename, user): 
+    def save_predictions_and_accuracy(self, predictions_filename, user): 
         '''
         Saves the predictions to file, updating the file with the model's predictions 
         to support recalculation of the accuracy

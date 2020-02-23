@@ -125,10 +125,10 @@ class Predictor:
         updater = ExpenseUpdater(self.correlation_id)
         updater.do(predictions_filename=predictions_filename)
 
-        # 6. Save predictions to File Storage
+        # 6. Save predictions to File Storage & recalc accuracy
         logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
 
-        file_storage.save_predictions(predictions_filename, self.user)
+        file_storage.save_predictions_and_accuracy(predictions_filename, self.user)
 
         logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
 
