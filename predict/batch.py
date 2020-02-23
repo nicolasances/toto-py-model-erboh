@@ -9,6 +9,7 @@ from toto_logger.logger import TotoLogger
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
 from dlg.remote import ExpenseUpdater
+from dlg.storage import FileStorage
 
 tmp_folder = os.environ['TOTO_TMP_FOLDER']
 if not os.path.exists(tmp_folder):
@@ -22,6 +23,7 @@ if not os.path.exists(base_folder):
 
 model = joblib.load('erboh.v1')
 logger = TotoLogger()
+file_storage = FileStorage('model-erboh', 1)
 
 def predict(message):
     '''
@@ -124,6 +126,9 @@ class Predictor:
         updater.do(predictions_filename=predictions_filename)
 
         logger.compute(self.correlation_id, '[ STEP 4 - UPDATE ] - Done!', 'info')
+
+        # 6. Save predictions to File Storage
+        file_storage.save_predictions(predictions_filename, self.user)
 
         return {"inferedRows": feature_engineering.count}
 

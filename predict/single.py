@@ -155,6 +155,9 @@ class Predictor:
             "monthly": prediction
         })
 
+        # 5. Update the predictions file
+
+
         logger.compute(self.correlation_id, '[ STEP 4 - UPDATE ] - Done!', 'info')
 
 

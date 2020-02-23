@@ -11,6 +11,7 @@ It needs the following environment variables:
  * **TOTO_HOST**: the host where APIs are reachable 
  * **TOTO_TMP_FOLDER**: a folder to store tmp files - This should be set in the Dockerfile
  * **TOTO_EVENTS_GCP_PROJECT_ID**: the Google Project Id for events in the current environment
+ * **TOTO_ENV**: the Toto environment (dev, prod, ...)
 
 ## Predictions
 This model generates predictions in two ways: 
