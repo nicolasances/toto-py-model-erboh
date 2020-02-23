@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 import uuid
 from google.cloud import storage
 from google.api_core.exceptions import NotFound
@@ -47,24 +48,24 @@ class FileStorage:
 
         return '{folder}/{file}'.format(folder=folder, file=filename)
 
-    def save_prediction(self, prediction, user):
+    def get_bucket_object(self, user): 
         '''
-        Updates the predictions file with the provided prediction
+        Returns the blob object corresponding to the stored predictions file 
+        for the specified user
         '''
-
-    def save_predictions(self, predictions_filename, user): 
-        '''
-        Saves the predictions to file, updating the file with the model's predictions 
-        to support recalculation of the accuracy
-        '''
-        # Load predictions in pandas
-        new_predictions = pd.read_csv(predictions_filename)[['id', 'occurs_monthly']]
-        new_predictions.rename(columns={'occurs_monthly': 'prediction'}, inplace=True)
-        new_predictions.set_index('id', inplace=True)
-
-        # Load previous predictions from bucket, if any
         pred_obj_name = '{model}/{version}/predictions/{user}.predictions.csv'.format(model=self.model_name, version=self.model_version, user=user)
         pred_obj = self.bucket.blob(pred_obj_name)
+
+        return pred_obj
+
+    def save(self, new_predictions, user):
+        '''
+        Method that groups the common logic for both save_prediction() and save_predictions()
+
+        Requires new_predictions to be a DataFrame with the following columns: "id", "prediction"
+        '''
+        # Load previous predictions from bucket, if any
+        pred_obj = self.get_bucket_object(user)
 
         # If there are no previous predictions, just save all the predictions
         if not pred_obj.exists():
@@ -111,6 +112,28 @@ class FileStorage:
             # Delete tmp file
             os.remove(tmp_filename)
 
+    def save_prediction(self, prediction, user):
+        '''
+        Updates the predictions file with the provided prediction
+        '''
+        # Create a dataframe for that prediction
+        new_predictions = pd.DataFrame(np.array([[prediction['id'], prediction['monthly']]]), columns=['id', 'monthly'])
+        new_predictions.set_index("id", inplace=True)
+        new_predictions.rename(columns={"monthly": "prediction"}, inplace=True)
+
+        self.save(new_predictions=new_predictions, user=user)
+
+    def save_predictions(self, predictions_filename, user): 
+        '''
+        Saves the predictions to file, updating the file with the model's predictions 
+        to support recalculation of the accuracy
+        '''
+        # Load predictions in pandas
+        new_predictions = pd.read_csv(predictions_filename)[['id', 'occurs_monthly']]
+        new_predictions.rename(columns={'occurs_monthly': 'prediction'}, inplace=True)
+        new_predictions.set_index('id', inplace=True)
+
+        self.save(new_predictions=new_predictions, user=user)
 
 
 

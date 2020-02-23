@@ -125,10 +125,12 @@ class Predictor:
         updater = ExpenseUpdater(self.correlation_id)
         updater.do(predictions_filename=predictions_filename)
 
-        logger.compute(self.correlation_id, '[ STEP 4 - UPDATE ] - Done!', 'info')
-
         # 6. Save predictions to File Storage
+        logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
+
         file_storage.save_predictions(predictions_filename, self.user)
+
+        logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
 
         return {"inferedRows": feature_engineering.count}
 

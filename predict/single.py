@@ -12,6 +12,7 @@ from toto_logger.logger import TotoLogger
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
 from dlg.remote import ExpenseUpdater
+from dlg.storage import FileStorage
 
 tmp_folder = os.environ['TOTO_TMP_FOLDER']
 if not os.path.exists(tmp_folder):
@@ -24,6 +25,7 @@ if not os.path.exists(base_folder):
     os.mkdir(base_folder)
 
 model = joblib.load('erboh.v1')
+file_storage = FileStorage('model-erboh', 1)
 logger = TotoLogger()
 
 def predict(message): 
@@ -149,16 +151,20 @@ class Predictor:
 
         # 4. Post an update to the expense
         logger.compute(self.correlation_id, '[ STEP 4 - UPDATE ] - Updating payment with prediction', 'info')
-        
-        ExpenseUpdater(self.correlation_id).do(expense={
+
+        expense = {
             "id": expense_id, 
             "monthly": prediction
-        })
+        }
+        
+        ExpenseUpdater(self.correlation_id).do(expense=expense)
 
         # 5. Update the predictions file
+        logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
 
+        file_storage.save_prediction(prediction=expense, user=user)
 
-        logger.compute(self.correlation_id, '[ STEP 4 - UPDATE ] - Done!', 'info')
+        logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
 
 
 #{"correlationId": "202002121919219199", "id": "5d71e5adcb15b1191e7ba273", "amount": 699.9, "user": "nicolas.matteazzi@gmail.com", "category": "AUTO", "description": "Train", "date": "20190906"}
