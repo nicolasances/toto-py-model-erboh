@@ -47,9 +47,9 @@ class HistoryDownloader:
             return
         
         try: 
-            df = df[['id', 'amount', 'category', 'date', 'description', 'monthly', 'yearMonth']]
+            df = df[['id', 'amount', 'category', 'date', 'description', 'monthly', 'yearMonth', 'user']]
         except KeyError: 
-            df = df[['id', 'amount', 'category', 'date', 'description', 'yearMonth']]
+            df = df[['id', 'amount', 'category', 'date', 'description', 'yearMonth', 'user']]
 
         # Generate a new yearMonth column
         df['yearMonth'] = pd.to_numeric(df['date'].str[:-2])

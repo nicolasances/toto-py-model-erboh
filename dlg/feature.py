@@ -55,7 +55,7 @@ def overlap_word_count(row1, row2):
 
 def same_amt_cat(row, dataset): 
 
-    ds = dataset[(dataset['category'] == row['category']) & (dataset['amount'] == row['amount'])]
+    ds = dataset[(dataset['category'] == row['category']) & (dataset['amount'] == row['amount']) & (dataset['user'] == row['user'])]
     
     # Features
     same_amt_cat_sw = 0 # sw stands for share words
@@ -106,7 +106,7 @@ def same_amt_cat(row, dataset):
 
 def sesm(row, dataset): 
     
-    ds = dataset[(dataset['category'] == row['category']) & (dataset['amount'] == row['amount'])]
+    ds = dataset[(dataset['category'] == row['category']) & (dataset['amount'] == row['amount']) & (dataset['user'] == row['user'])]
     
     if len(ds) > 1:
         overlaps = ds['description_bow'].apply(overlap_word_count, row2=row['description_bow'])
@@ -116,16 +116,19 @@ def sesm(row, dataset):
     
     return 0
 
-def engineer_features_for_month(month, df): 
+def engineer_features_for_month(month, df, training=False): 
     '''
     Engineers the features for the specified month:
     - month: the month in a YYYYMM format
     - df:   the whole data set
 
-    IMPORTANT: only generates features for the expenses that haven't the 'monthly' field already set!!
+    IMPORTANT: only generates features for the expenses that haven't the 'monthly' field already set WHEN NOT TRAINING!!
     '''
     try: 
-        features_m = df[(df['yearMonth'] == month) & (df['monthly'].isnull())]
+        if not training:
+            features_m = df[(df['yearMonth'] == month) & (df['monthly'].isnull())]
+        else: 
+            features_m = df[(df['yearMonth'] == month)]
     except KeyError: 
         features_m = df[(df['yearMonth'] == month)]
 
@@ -176,12 +179,13 @@ def category_dummies(cat):
 
 class FeatureEngineering: 
 
-    def __init__(self, data_file, output_file_name):
+    def __init__(self, data_file, output_file_name, training=False):
         self.output_file_name = output_file_name
         self.data_file = data_file
         self.model_feature_names = None
         self.empty = False
         self.count = 0
+        self.training = training
 
     def do(self): 
 
@@ -199,7 +203,7 @@ class FeatureEngineering:
         features = pd.DataFrame()
 
         for month in months: 
-            features = pd.concat([features, engineer_features_for_month(month, data)], ignore_index=True, sort=False)
+            features = pd.concat([features, engineer_features_for_month(month, data, self.training)], ignore_index=True, sort=False)
 
         if features.empty:
             self.empty = True
@@ -217,8 +221,13 @@ class FeatureEngineering:
               'category_SUPERMERCATO', 'category_FOOD', 'category_VIAGGI', 'category_PALESTRA', 'category_SALUTE', 'category_XMAS'
               ]
 
+        all_features_names = self.model_feature_names.copy()
+        all_features_names.append('id')
+        if self.training: 
+            all_features_names.append('monthly')
+
         # Save all the features to file
-        features[['id'] + self.model_feature_names].to_csv(self.output_file_name)
+        features[all_features_names].to_csv(self.output_file_name)
 
         # Save additional data
         self.count = len(features)
