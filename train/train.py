@@ -5,7 +5,6 @@ import pandas as pd
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
-from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from toto_logger.logger import TotoLogger
 
@@ -80,15 +79,17 @@ class Trainer:
         X = features[feature_engineering.model_feature_names]
         y = features['monthly']
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-
         best_nn = MLPClassifier(hidden_layer_sizes=(5, 5), activation='identity', alpha=0.1, max_iter=1000)
 
-        best_nn.fit(X_train, y_train)
+        # IMPORTANT
+        # We're not splitting the data between test and train, because we're not doing
+        # any tuning!! 
+        # Right now we're just doing full retraining, with already tuned parameters!
+        best_nn.fit(X, y)
 
-        best_nn_pred = best_nn.predict(X_test)
+        best_nn_pred = best_nn.predict(X)
 
-        f1 = f1_score(y_test, best_nn_pred)
+        f1 = f1_score(y, best_nn_pred)
 
         logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Training complete. F1 Score: {}'.format(f1),'info')
 
@@ -99,6 +100,8 @@ class Trainer:
                 {"name": "F1", "value": f1}
             ]
         }, self.correlation_id)
+
+        logger.compute(self.correlation_id, '[ STEP 4 - POSTING ] - Posted new retrained model.','info')
 
 
 
