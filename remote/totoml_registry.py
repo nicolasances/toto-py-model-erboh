@@ -68,7 +68,7 @@ def check_registry(model_name):
         logger.compute(correlation_id, 'Model [{model}] exists in Toto ML Model Registry'.format(model=model_name), 'info')
 
 
-def create_retrained_model(model_name, metrics, corr_id): 
+def post_retrained_model(model_name, metrics, corr_id): 
     """
     Posts a new retrained model to Toto ML Registry for a given model
     """
@@ -88,3 +88,34 @@ def create_retrained_model(model_name, metrics, corr_id):
         logger.compute(corr_id, 'Something went wrong when creating a new retrained model on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
 
     return response.json()['id']
+
+def put_champion_metrics(model_name, metrics, cid): 
+    """
+    Updates the metrics of the chamption model 
+
+    Parameters
+    ----------
+    model_name (string)
+        The name of the models
+
+    metrics (list)
+        A list [] of metrics object. 
+        Each metric is a {name: <name>, value: <value>} object
+    """
+    response = requests.put(
+        'https://{host}/apis/totoml/registry/models/{model}/metrics'.format(host=toto_host, model=model_name),
+        headers={
+            'Accept': 'application/json',
+            'Authorization': toto_auth,
+            'x-correlation-id': cid
+        }, 
+        json={
+            "metrics": metrics
+        }
+    )
+
+    if response.status_code != 200: 
+        logger.compute(cid, 'Something went wrong when updating the metrics on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
+
+    return response.json()['id']
+

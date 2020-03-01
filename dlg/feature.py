@@ -215,7 +215,7 @@ class FeatureEngineering:
         if features.empty:
             self.empty = True
             logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - No rows to process.', 'warn')
-            return
+            return (None, None)
 
         # Finally: create dummies for the category
         features[['category_SUPERMERCATO', 'category_FOOD', 'category_VIAGGI', 'category_PALESTRA', 'category_SALUTE', 'category_XMAS']] = features['category'].apply(category_dummies)

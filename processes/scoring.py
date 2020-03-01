@@ -1,20 +1,21 @@
 import os
-import re
 import uuid
 import pandas as pd
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
-from .score import Scorer
+from score.score import Scorer
 from predict.predictor import Predictor
 from toto_logger.logger import TotoLogger
+from remote.totoml_registry import put_champion_metrics
 
 logger = TotoLogger()
 
-class AccuracyCalculator: 
+class ScoreProcess: 
 
-    def __init__(self, request): 
+    def __init__(self, model_name, request): 
         self.user = 'all'
         self.correlation_id = request.headers['x-correlation-id']
+        self.model_name = model_name
 
     def do(self): 
         """
@@ -23,7 +24,6 @@ class AccuracyCalculator:
         """
         
         # Create the folder where to store all the data
-        # Create a UUID for the folder containing history, features and predictions
         folder = "{tmp}/erboh/{fid}".format(tmp=os.environ['TOTO_TMP_FOLDER'], fid=uuid.uuid1())
         os.makedirs(name=folder, exist_ok=True)
 
@@ -41,4 +41,7 @@ class AccuracyCalculator:
         metrics = Scorer(self.correlation_id).do(y, y_pred)
 
         # 5. Post metrics
-        # TODO: post metrics for champion model
+        put_champion_metrics(self.model_name, metrics, self.correlation_id)
+
+        return metrics
+
