@@ -56,7 +56,7 @@ def overlap_word_count(row1, row2):
 def same_amt_cat(row, dataset): 
 
     ds = dataset[(dataset['category'] == row['category']) & (dataset['amount'] == row['amount']) & (dataset['user'] == row['user'])]
-    
+
     # Features
     same_amt_cat_sw = 0 # sw stands for share words
     same_amt_cat_sw_2 = 0

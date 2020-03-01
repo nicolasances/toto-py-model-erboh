@@ -1,5 +1,5 @@
-from .remote import check_registry, create_challenger
-from .gcpremote import save_challenger
+from .remote import check_registry, create_retrained_model
+from .gcpremote import save_retrained_model_pickle
 
 class ModelController: 
 
@@ -11,9 +11,9 @@ class ModelController:
         # Check if the model exists on the registry. If it does not, create it.
         check_registry(self.model_name)
 
-    def post_challenger(self, data, cid): 
+    def post_retrained_model(self, data, cid): 
         """
-        Post a new challenger model to the current champion model
+        Post a new retrained model to the current champion model
 
         Parameters
         ----------
@@ -24,8 +24,8 @@ class ModelController:
              - name : string, the name of the metric
              - value : anything, the value of the metric
         """
-        # 1. Create a new challenger and post the metrics
-        challenger_id = create_challenger(self.model_name, data['metrics'], cid);
+        # 1. Create a new retrained model and post the metrics
+        create_retrained_model(self.model_name, data['metrics'], cid);
 
         # 2. TODO: save the model of the challenger
-        save_challenger(self.model_name, challenger_id, data['model'])
+        save_retrained_model_pickle(self.model_name, data['model'])

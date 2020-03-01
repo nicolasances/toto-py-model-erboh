@@ -68,12 +68,12 @@ def check_registry(model_name):
         logger.compute(correlation_id, 'Model [{model}] exists in Toto ML Model Registry'.format(model=model_name), 'info')
 
 
-def create_challenger(model_name, metrics, corr_id): 
+def create_retrained_model(model_name, metrics, corr_id): 
     """
-    Posts a new challenger to Toto ML Registry
+    Posts a new retrained model to Toto ML Registry for a given model
     """
     response = requests.post(
-        'https://{host}/apis/totoml/registry/models/{model}/challengers'.format(host=toto_host, model=model_name),
+        'https://{host}/apis/totoml/registry/models/{model}/retrained'.format(host=toto_host, model=model_name),
         headers={
             'Accept': 'application/json',
             'Authorization': toto_auth,
@@ -85,6 +85,6 @@ def create_challenger(model_name, metrics, corr_id):
     )
 
     if response.status_code != 201: 
-        logger.compute(corr_id, 'Something went wrong when creating a new challenger on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
+        logger.compute(corr_id, 'Something went wrong when creating a new retrained model on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
 
     return response.json()['id']

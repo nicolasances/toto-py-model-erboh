@@ -65,10 +65,17 @@ class Trainer:
 
         try: 
             features = pd.read_csv(features_filename)
+            
+            # Only keep the features that are labeled!
+            features = features[features['monthly'].notnull()]
+
+            # Change the value of the monthly from bool to 0-1 values
+            features['monthly'] = features['monthly'].apply(lambda x : int(x == True))
+
         except: 
             logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Problem reading file {}. Stopping'.format(features_filename), 'error')
 
-        logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Read {} rows from historical data'.format(len(features)),'info')
+        logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Training on {} rows'.format(len(features)),'info')
 
         X = features[feature_engineering.model_feature_names]
         y = features['monthly']
@@ -86,7 +93,7 @@ class Trainer:
         logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Training complete. F1 Score: {}'.format(f1),'info')
 
         # 4. Save the new model as a challenger 
-        self.model_controller.post_challenger({
+        self.model_controller.post_retrained_model({
             "model": best_nn, 
             "metrics": [
                 {"name": "F1", "value": f1}

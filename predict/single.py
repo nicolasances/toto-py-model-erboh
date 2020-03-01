@@ -103,7 +103,7 @@ class Predictor:
         
         # Append the new expense to the history file, so that we can reuse the feature engineering the way it is
         history_df = pd.read_csv(history_filename)
-        new_df = pd.DataFrame(np.array([[expense_id, amount, category, date, description, None, ym]]), columns=['id','amount','category','date','description','monthly','yearMonth'])
+        new_df = pd.DataFrame(np.array([[expense_id, amount, category, date, description, None, ym, user]]), columns=['id','amount','category','date','description','monthly','yearMonth','user'])
 
         full_df = pd.concat([history_df, new_df], axis=0, ignore_index=True, sort=False)
 
