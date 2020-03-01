@@ -6,6 +6,7 @@ from label.labeling import data_labeled
 from dlg.storage import FileStorage
 from train.train import Trainer
 from controller.mc import ModelController
+from metrics.accuracy import AccuracyCalculator
 
 # Microservice name
 ms_name = 'model-erboh'
@@ -41,6 +42,18 @@ def train():
     except KeyError as e: 
         return jsonify({"code": 400, "message": str(e)})
 
+@app.route('/metrics', methods=['GET'])
+def metrics(): 
+    try: 
+        calculator = AccuracyCalculator(request)
+
+        resp = Response(response=calculator.do(), status=200)
+        resp.headers['Content-Type'] = 'application/json'
+
+        return resp
+
+    except KeyError as e: 
+        return jsonify({"code": 400, "message": str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)

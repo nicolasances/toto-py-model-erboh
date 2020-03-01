@@ -73,6 +73,7 @@ class Trainer:
 
         except: 
             logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Problem reading file {}. Stopping'.format(features_filename), 'error')
+            return
 
         logger.compute(self.correlation_id, '[ STEP 3 - TRAINING ] - Training on {} rows'.format(len(features)),'info')
 

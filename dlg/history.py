@@ -12,16 +12,21 @@ logger = TotoLogger()
 
 class HistoryDownloader: 
 
-    def __init__(self, output_file_name, correlation_id): 
-        self.empty = False
-        self.output_file_name = output_file_name
+    def __init__(self, folder, correlation_id): 
         self.correlation_id = correlation_id
+        self.folder = folder
 
     def download(self, user, dateGte='20100101'): 
         '''
         This method downloads all historical movements and saves it as a temporary file, to be used to then feature
         engineer the data to infer
         '''
+
+        logger.compute(self.correlation_id, '[ HISTORICAL ] - Starting historical data download', 'info')
+
+        history_filename = '{folder}/history.{user}.csv'.format(user=user, folder=self.folder);
+
+        # Call the API to download the data
         response = requests.get(
             'https://{host}/apis/expenses/expenses?user={user}&dateGte={dateGte}'.format(user=user, dateGte=dateGte, host=toto_host),
             headers={
@@ -31,19 +36,22 @@ class HistoryDownloader:
             }
         )
 
+        # Convert to JSON
         json_response = response.json()
 
+        # Extract the expenses array
         try: 
             expenses = json_response['expenses']
         except: 
-            logger.compute(self.correlation_id, 'Error reading the following microservice response: {}'.format(json_response), 'error')
-            self.empty = True
+            logger.compute(self.correlation_id, '[ HISTORICAL ] - Error reading the following microservice response: {}'.format(json_response), 'error')
+            logger.compute(self.correlation_id, '[ HISTORICAL ] - No historical data', 'warn')
             return
 
+        # Create a pandas data frame
         df = json_normalize(expenses)
 
         if df.empty: 
-            self.empty = True
+            logger.compute(self.correlation_id, '[ HISTORICAL ] - No historical data', 'warn')
             return
         
         try: 
@@ -58,6 +66,11 @@ class HistoryDownloader:
         df.sort_values(by=['date'], ascending=True, inplace=True)
 
         # Save the dataframe
-        df.to_csv(self.output_file_name) 
+        df.to_csv(history_filename) 
+
+        logger.compute(self.correlation_id, '[ HISTORICAL ] - Historical data downloaded', 'info')
+
+        # Return the filename
+        return history_filename
 
 

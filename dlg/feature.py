@@ -1,10 +1,10 @@
 # Test of ML Flow
-
 import re
 import numpy as np
 import pandas as pd
 import mlflow
 import mlflow.sklearn
+from toto_logger.logger import TotoLogger
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
@@ -12,6 +12,8 @@ from datetime import datetime as dt, timedelta
 from sklearn.metrics import f1_score, confusion_matrix, classification_report
 
 pd.options.mode.chained_assignment = None
+
+logger = TotoLogger()
 
 def get_expenses_of_month(full_dataset, current_date, yearMonthDelta): 
     '''
@@ -179,15 +181,20 @@ def category_dummies(cat):
 
 class FeatureEngineering: 
 
-    def __init__(self, data_file, output_file_name, training=False):
-        self.output_file_name = output_file_name
+    def __init__(self, folder, data_file, correlation_id, training=False):
         self.data_file = data_file
+        self.folder = folder
         self.model_feature_names = None
         self.empty = False
         self.count = 0
         self.training = training
+        self.correlation_id = correlation_id
 
-    def do(self): 
+    def do(self, user): 
+
+        logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - Starting feature engineering', 'info')
+
+        output_file_name = '{folder}/features.{user}.csv'.format(user=user, folder=self.folder);
 
         # Read all the data
         data = pd.read_csv(self.data_file)
@@ -207,6 +214,7 @@ class FeatureEngineering:
 
         if features.empty:
             self.empty = True
+            logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - No rows to process.', 'warn')
             return
 
         # Finally: create dummies for the category
@@ -227,7 +235,13 @@ class FeatureEngineering:
             all_features_names.append('monthly')
 
         # Save all the features to file
-        features[all_features_names].to_csv(self.output_file_name)
+        features[all_features_names].to_csv(output_file_name)
 
         # Save additional data
         self.count = len(features)
+
+        logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - Features engineered successfully', 'info')
+        logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - # of rows: {}'.format(self.count), 'info')
+
+        return (self.model_feature_names, output_file_name)
+
