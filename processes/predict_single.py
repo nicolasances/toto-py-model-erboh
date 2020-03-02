@@ -6,7 +6,7 @@ from toto_logger.logger import TotoLogger
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
 from remote.expenses import update_expense
-from dlg.storage import FileStorage
+from remote.gcpstorage import FileStorage
 from predict.predictor import Predictor
 
 file_storage = FileStorage('model-erboh', 1)

@@ -8,7 +8,7 @@ from toto_logger.logger import TotoLogger
 
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
-from dlg.storage import FileStorage
+from remote.gcpstorage import FileStorage
 from remote.expenses import update_expenses
 from predict.predictor import Predictor
 

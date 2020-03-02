@@ -72,6 +72,7 @@ def post_retrained_model(model_name, metrics, corr_id):
     """
     Posts a new retrained model to Toto ML Registry for a given model
     """
+
     response = requests.post(
         'https://{host}/apis/totoml/registry/models/{model}/retrained'.format(host=toto_host, model=model_name),
         headers={
@@ -87,7 +88,9 @@ def post_retrained_model(model_name, metrics, corr_id):
     if response.status_code != 201: 
         logger.compute(corr_id, 'Something went wrong when creating a new retrained model on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
 
-    return response.json()['id']
+    logger.compute(corr_id, '[ POSTING ] - Posted retrained model', 'info')
+
+    return
 
 def put_champion_metrics(model_name, metrics, cid): 
     """
@@ -117,5 +120,7 @@ def put_champion_metrics(model_name, metrics, cid):
     if response.status_code != 200: 
         logger.compute(cid, 'Something went wrong when updating the metrics on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
 
-    return response.json()['id']
+    logger.compute(cid, '[ POSTING ] - Updated metrics of champion model', 'info')
+
+    return 
 
