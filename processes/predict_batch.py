@@ -8,9 +8,9 @@ from toto_logger.logger import TotoLogger
 
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
+from dlg.predictor import Predictor
 from remote.gcpstorage import FileStorage
 from remote.expenses import update_expenses
-from predict.predictor import Predictor
 
 logger = TotoLogger()
 file_storage = FileStorage('model-erboh', 1)

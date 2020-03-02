@@ -15,7 +15,7 @@ It needs the following environment variables:
 
 ## Predictions
 This model generates predictions in two ways: 
- * **Batch**: will generate predictions for all expenses that do not have a `monthly` field set
+ * **batch**: will generate predictions for all expenses that do not have a `monthly` field set
  * **single**: will generate a prediction on demand for a single expense (indenpendently of whether that expense has the `monthly` field set)
 
 In both approaches, the model generates files and stores them in a temporary folder under:

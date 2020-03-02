@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, Response
 
 from toto_pubsub.consumer import TotoEventConsumer
+from toto_pubsub.publisher import TotoEventPublisher
 
 from remote.totoml_registry import check_registry
 
@@ -17,11 +18,18 @@ class ModelController:
         self.model_name = model_name;
         self.ms_name = 'model-{}'.format(model_name)
 
-        # Check if the model exists on the registry. If it does not, create it.
+        # Check if the model exists on the registry. 
+        # If it does not, create it.
         check_registry(self.model_name)
 
+        # Check if there's a champion model (pickle file) published on GCP Storage
+        # If there's no model, upload the default model (local: erboh.v1)
+
         # Event Consumers
-        TotoEventConsumer(self.ms_name, ['erboh-predict-batch', 'erboh-predict-single'], [self.predict_batch, self.predict_single])
+        TotoEventConsumer(self.ms_name, ['erboh-predict-batch', 'erboh-predict-single', 'erboh-train'], [self.predict_batch, self.predict_single, self.train])
+
+        # Event Publishers
+        self.publisher_model_train = TotoEventPublisher(microservice=self.ms_name, topics=['erboh-train'])
 
         # APIs
         @flask_app.route('/')
@@ -30,7 +38,12 @@ class ModelController:
 
         @flask_app.route('/train', methods=['POST'])
         def train(): 
-            resp = jsonify(self.train(request))
+
+            # Start the training
+            self.publisher_model_train.publish(topic='erboh-train', event={"correlationId": request.headers['x-correlation-id']})
+
+            # Answer
+            resp = jsonify({"message": "Training process started"})
             resp.status_code = 200
             resp.headers['Content-Type'] = 'application/json'
 

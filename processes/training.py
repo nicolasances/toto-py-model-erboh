@@ -1,11 +1,11 @@
 import os
 import uuid
 import pandas as pd
-from train.trainer import Trainer
+from dlg.trainer import Trainer
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
-from score.score import Scorer
-from predict.predictor import Predictor
+from dlg.predictor import Predictor
+from dlg.score import Scorer
 from remote.totoml_registry import post_retrained_model
 from remote.gcpremote import save_retrained_model_pickle
 from toto_logger.logger import TotoLogger
@@ -14,9 +14,9 @@ logger = TotoLogger()
 
 class TrainingProcess: 
 
-    def __init__(self, model_name, request): 
+    def __init__(self, model_name, message): 
         self.user = 'all'
-        self.correlation_id = request.headers['x-correlation-id']
+        self.correlation_id = message['correlationId']
         self.model_name = model_name
 
     def do(self) : 

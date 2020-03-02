@@ -3,10 +3,10 @@ import uuid
 import pandas as pd
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
-from score.score import Scorer
-from predict.predictor import Predictor
-from toto_logger.logger import TotoLogger
+from dlg.predictor import Predictor
+from dlg.score import Scorer
 from remote.totoml_registry import put_champion_metrics
+from toto_logger.logger import TotoLogger
 
 logger = TotoLogger()
 
