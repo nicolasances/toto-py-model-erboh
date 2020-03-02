@@ -6,16 +6,19 @@ from dlg.feature import FeatureEngineering
 from dlg.predictor import Predictor
 from dlg.score import Scorer
 from remote.totoml_registry import put_champion_metrics
+from remote.gcpremote import load_champion_model
 from toto_logger.logger import TotoLogger
 
 logger = TotoLogger()
 
 class ScoreProcess: 
 
-    def __init__(self, model_name, request): 
+    def __init__(self, model, request): 
         self.user = 'all'
         self.correlation_id = request.headers['x-correlation-id']
-        self.model_name = model_name
+        self.model_name = model['name']
+        self.model_version = model['version']
+        self.model = model
 
     def do(self): 
         """
@@ -35,7 +38,7 @@ class ScoreProcess:
         (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, training=True).do(user=self.user)
 
         # 3. Predict on features
-        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True).do()
+        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=self.model).do()
 
         # 4. Calculate accuracy
         metrics = Scorer(self.correlation_id).do(y, y_pred)

@@ -1,6 +1,7 @@
 import pandas as pd
 import joblib
 from toto_logger.logger import TotoLogger
+from remote.gcpremote import load_champion_model
 
 logger = TotoLogger()
 
@@ -21,18 +22,28 @@ class Predictor:
         predict_feature_names (list) 
             The list of the features that HAVE TO BE CONSIDERED FOR PREDICTING
 
-        model (object) default None
+        model (dict) default None
             The model to use for the prediction. 
-            If None is passed, the champion model is going to be used
+            Dictionnary as returned by the Toto ML Registry GET /models/:name
+            If None is passed, the default local model is going to be used
+            The Dict must have: 
+            - name (string): name of the model to load
+            - version (int): version of the model to load
         """
         self.correlation_id = cid
         self.features_filename = features_filename
         self.predict_only_labeled = predict_only_labeled
         self.predict_feature_names = predict_feature_names
         self.save_to_folder = save_to_folder
-        
-        self.model = model
-        if self.model == None:
+
+        if model is not None: 
+            # Load the model
+            logger.compute(self.correlation_id, '[ PREDICTING ] - Loading model {model}.v{version} from storage for prediction.'.format(model=model['name'], version=model['version']),'info')
+
+            self.model = load_champion_model(model['name'], model['version'], self.correlation_id)
+        else:
+            logger.compute(self.correlation_id, '[ PREDICTING ] - No model passed. Using the local default.','info')
+
             self.model = joblib.load('erboh.v1')
 
     def do(self): 

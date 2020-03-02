@@ -15,7 +15,7 @@ from remote.expenses import update_expenses
 logger = TotoLogger()
 file_storage = FileStorage('model-erboh', 1)
 
-def predict(message):
+def predict(message, model):
     '''
     Processes the batch inference request message
     '''
@@ -26,7 +26,7 @@ def predict(message):
 
         logger.compute(cid, "[ BATCH INFER EVENT LISTENER ] - Received a request to do batch inference for {}".format(user), 'info')
 
-        BatchPredictor(user, cid).do()
+        BatchPredictor(user, model, cid).do()
 
     except KeyError as ke: 
         logger.compute(cid, "Event {} is missing attributes. Got error: {}".format(message, ke),'error')
@@ -34,12 +34,13 @@ def predict(message):
 
 class BatchPredictor:
 
-    def __init__(self, user, correlation_id):
+    def __init__(self, user, model, correlation_id):
         '''
         user: user email
         '''
         self.user = user
         self.correlation_id = correlation_id
+        self.model = model
 
     def do(self):
 
@@ -54,7 +55,7 @@ class BatchPredictor:
         (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id).do(user=self.user)
 
         # 3. Load the model and predict
-        (y_pred, y, predictions_filename) = Predictor(features_filename, model_feature_names, self.correlation_id, save_to_folder=folder).do()
+        (y_pred, y, predictions_filename) = Predictor(features_filename, model_feature_names, self.correlation_id, save_to_folder=folder, model=self.model).do()
 
         # 5. For each prediction, update the expense (asynchronously)
         if y_pred is None: 

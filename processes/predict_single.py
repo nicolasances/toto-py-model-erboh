@@ -12,7 +12,7 @@ from remote.gcpstorage import FileStorage
 file_storage = FileStorage('model-erboh', 1)
 logger = TotoLogger()
 
-def predict(message): 
+def predict(message, model): 
     '''
     Processes a single prediction
     
@@ -36,7 +36,7 @@ def predict(message):
 
         logger.compute(cid, "[ PREDICTION LISTENER ] - Received a request for a prediction on expense (id: {expense_id}, user: {user}, amount: {amount}, category: {category}, description: {description}, date: {date})".format(user=user, amount=amount, description=description, date=date, category=category, expense_id=expense_id), 'info')
 
-        SinglePredictor(cid).predict(expense_id, user, amount, category, description, date)
+        SinglePredictor(model, cid).predict(expense_id, user, amount, category, description, date)
     
     except KeyError as ke: 
         print("Event {} has attributes missing. Got error: {}".format(message, ke))
@@ -44,8 +44,9 @@ def predict(message):
 
 class SinglePredictor: 
 
-    def __init__(self, correlation_id): 
+    def __init__(self, model, correlation_id): 
         self.correlation_id = correlation_id
+        self.model = model
 
     def predict(self, expense_id, user, amount, category, description, date): 
         '''
@@ -64,7 +65,7 @@ class SinglePredictor:
         (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id).do(user=user)
 
         # 3. Load the model and predict
-        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id).do()
+        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id, model=self.model).do()
 
         logger.compute(self.correlation_id, '[ PREDICT ] - Prediction: {}'.format(y_pred[0]), 'info')
 

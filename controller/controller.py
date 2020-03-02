@@ -1,18 +1,33 @@
+import datetime
+from random import randint
 from flask import Flask, jsonify, request, Response
 
 from toto_pubsub.consumer import TotoEventConsumer
 from toto_pubsub.publisher import TotoEventPublisher
 
 from remote.totoml_registry import check_registry
+from remote.gcpremote import init_champion_model
 
 from processes.training import TrainingProcess
 from processes.scoring import ScoreProcess
 from processes.predict_single import predict as predict_single
 from processes.predict_batch import predict as predict_batch
 
+def cid(): 
+    '''
+    Generates a Toto-valid Correlation ID
+    Example: 20200229160021694-09776
+    '''
+    datepart = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+    randpart = str(randint(0, 100000)).zfill(5)
+
+    return '{date}-{rand}'.format(date=datepart, rand=randpart)
+
 class ModelController: 
 
     def __init__(self, model_name, flask_app): 
+
+        correlation_id = cid()
 
         # Init variables
         self.model_name = model_name;
@@ -20,10 +35,11 @@ class ModelController:
 
         # Check if the model exists on the registry. 
         # If it does not, create it.
-        check_registry(self.model_name)
+        self.model = check_registry(self.model_name, correlation_id)
 
         # Check if there's a champion model (pickle file) published on GCP Storage
         # If there's no model, upload the default model (local: erboh.v1)
+        init_champion_model(self.model, correlation_id)
 
         # Event Consumers
         TotoEventConsumer(self.ms_name, ['erboh-predict-batch', 'erboh-predict-single', 'erboh-train'], [self.predict_batch, self.predict_single, self.train])
@@ -70,7 +86,7 @@ class ModelController:
         """
         Calculate the accuracy (metrics) of the champion model
         """
-        metrics = ScoreProcess(self.model_name, request).do()
+        metrics = ScoreProcess(self.model, request).do()
 
         return {"metrics": metrics}
 
@@ -78,12 +94,12 @@ class ModelController:
         """
         Predicts on a single item
         """
-        predict_single(message)
+        predict_single(message, self.model)
     
     def predict_batch(self, message):
         """
         Predicts on a batch of items
         """
-        predict_batch(message)
+        predict_batch(message, self.model)
 
 
