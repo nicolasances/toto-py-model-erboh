@@ -2,8 +2,6 @@
 import re
 import numpy as np
 import pandas as pd
-import mlflow
-import mlflow.sklearn
 from toto_logger.logger import TotoLogger
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split

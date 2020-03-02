@@ -8,8 +8,8 @@ from toto_logger.logger import TotoLogger
 
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
-from dlg.remote import ExpenseUpdater
 from dlg.storage import FileStorage
+from remote.expenses import update_expenses
 from predict.predictor import Predictor
 
 logger = TotoLogger()
@@ -60,10 +60,7 @@ class BatchPredictor:
         if y_pred is None: 
             return
 
-        logger.compute(self.correlation_id, '[ STEP 4 - UPDATE ] - Updating payments with predictions', 'info')
-
-        updater = ExpenseUpdater(self.correlation_id)
-        updater.do(predictions_filename=predictions_filename)
+        update_expenses(predictions_filename, self.correlation_id)
 
         # 6. Save predictions to File Storage & recalc accuracy
         # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')

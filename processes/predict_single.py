@@ -5,7 +5,7 @@ from toto_logger.logger import TotoLogger
 
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
-from dlg.remote import ExpenseUpdater
+from remote.expenses import update_expense
 from dlg.storage import FileStorage
 from predict.predictor import Predictor
 
@@ -69,15 +69,8 @@ class SinglePredictor:
         logger.compute(self.correlation_id, '[ PREDICT ] - Prediction: {}'.format(y_pred[0]), 'info')
 
         # 4. Post an update to the expense
-        logger.compute(self.correlation_id, '[ UPDATE ] - Updating payment with prediction', 'info')
-
-        expense = {
-            "id": expense_id, 
-            "monthly": y_pred[0]
-        }
+        update_expense({"id": expense_id, "monthly": y_pred[0]}, self.correlation_id)
         
-        ExpenseUpdater(self.correlation_id).do(expense=expense)
-
         # 5. Update the predictions file
         # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
 
