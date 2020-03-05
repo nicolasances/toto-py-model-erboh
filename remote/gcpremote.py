@@ -74,9 +74,15 @@ def init_champion_model(model, cid):
 
     logger.compute(cid, 'Champion Model {model}.v{version} created.'.format(model=model['name'], version=model['version']), 'info')
 
-def load_champion_model(model_name, model_version, cid): 
+def load_champion_model(model_info, cid): 
     """ 
     Loads the champion model from the bucket
+
+    Parameters
+    ----------
+    model_info (dict)
+        Contains the "name" and "version" of the model
+        Used to look for the model pickle file
     """
     try:
         bucket = client.get_bucket(bucket_name)
@@ -84,7 +90,7 @@ def load_champion_model(model_name, model_version, cid):
         logger.compute(cid, 'Bucket {} not found. Please create it first'.format(bucket_name), 'error')
         return
 
-    bucket_objname = '{model}/champion/{model}.v{version}'.format(model=model_name, version=model_version)
+    bucket_objname = '{model}/champion/{model}.v{version}'.format(model=model_info['name'], version=model_info['version'])
     bucket_obj = bucket.blob(bucket_objname)
 
     if bucket_obj.exists():

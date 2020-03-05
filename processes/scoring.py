@@ -13,11 +13,28 @@ logger = TotoLogger()
 
 class ScoreProcess: 
 
-    def __init__(self, model, request): 
+    def __init__(self, model_info, model, correlation_id): 
+        """
+        Scoring process
+
+        Parameters
+        ----------
+        model_info (dict) 
+            Info about the model
+            Requires 'name' and 'version' to be passed
+        
+        model (object)
+            The Pickle object of the model, used to score
+
+        correlation_id (string)               
+            The correlation ID to propagate
+        """
+
         self.user = 'all'
-        self.correlation_id = request.headers['x-correlation-id']
-        self.model_name = model['name']
-        self.model_version = model['version']
+        self.correlation_id = correlation_id
+        self.model_name = model_info['name']
+        self.model_version = model_info['version']
+        self.model_info = model_info
         self.model = model
 
     def do(self): 

@@ -12,36 +12,6 @@ from remote.gcpstorage import FileStorage
 file_storage = FileStorage('model-erboh', 1)
 logger = TotoLogger()
 
-def predict(message, model): 
-    '''
-    Processes a single prediction
-    
-    Requires a message that is formatted like this: 
-    id (string): the id of the expense
-    user (string): the user email
-    amount (float): the amount of the expense (always positive)
-    description (string): the description of the expense
-    date (string): the date of the expense, formatted YYYYMMDD
-    category (string): the category of the epense
-    '''
-    try: 
-
-        expense_id = message['id']
-        user = message['user']
-        category = message['category']
-        amount = message['amount']
-        description = message['description']
-        date = message['date'] 
-        cid = message['correlationId']
-
-        logger.compute(cid, "[ PREDICTION LISTENER ] - Received a request for a prediction on expense (id: {expense_id}, user: {user}, amount: {amount}, category: {category}, description: {description}, date: {date})".format(user=user, amount=amount, description=description, date=date, category=category, expense_id=expense_id), 'info')
-
-        SinglePredictor(model, cid).predict(expense_id, user, amount, category, description, date)
-    
-    except KeyError as ke: 
-        print("Event {} has attributes missing. Got error: {}".format(message, ke))
-
-
 class SinglePredictor: 
 
     def __init__(self, model, correlation_id): 
@@ -80,4 +50,4 @@ class SinglePredictor:
         # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
 
 
-#{"correlationId": "202002121919219199", "id": "5d71e5adcb15b1191e7ba273", "amount": 699.9, "user": "nicolas.matteazzi@gmail.com", "category": "AUTO", "description": "Train", "date": "20190906"}
+# {"correlationId": "202002121919219199", "id": "5d71e5adcb15b1191e7ba273", "amount": 699.9, "user": "nicolas.matteazzi@gmail.com", "category": "AUTO", "description": "Train", "date": "20190906"}

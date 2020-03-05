@@ -6,12 +6,7 @@ from toto_pubsub.consumer import TotoEventConsumer
 from toto_pubsub.publisher import TotoEventPublisher
 
 from remote.totoml_registry import check_registry
-from remote.gcpremote import init_champion_model
-
-from processes.training import TrainingProcess
-from processes.scoring import ScoreProcess
-from processes.predict_single import predict as predict_single
-from processes.predict_batch import predict as predict_batch
+from remote.gcpremote import init_champion_model, load_champion_model
 
 def cid(): 
     '''
@@ -24,9 +19,34 @@ def cid():
     return '{date}-{rand}'.format(date=datepart, rand=randpart)
 
 class ModelController: 
+    """
+    This class controls a model and acts as a proxy for all operations 
+    regarding a model 
+    """
 
-    def __init__(self, model_name, flask_app): 
+    def __init__(self, model_name, flask_app, model_delegate): 
+        """
+        Initializes the controller
 
+        Parameters
+        ----------
+        model_name (string)
+            The name of the model (e.g. erboh)
+
+        flask_app 
+            The flask app
+        
+        model_delegate
+            A model delegate, that provides the implementations of the following functions: 
+            - predict_single()
+            - predict_batch()
+            - score()
+            - train()
+        """
+
+        self.model_delegate = model_delegate
+
+        # Generate a correlation ID for all init operations
         correlation_id = cid()
 
         # Init variables
@@ -35,11 +55,24 @@ class ModelController:
 
         # Check if the model exists on the registry. 
         # If it does not, create it.
-        self.model = check_registry(self.model_name, correlation_id)
+        self.model_info = check_registry(self.model_name, correlation_id)
 
         # Check if there's a champion model (pickle file) published on GCP Storage
         # If there's no model, upload the default model (local: erboh.v1)
-        init_champion_model(self.model, correlation_id)
+        init_champion_model(self.model_info, correlation_id)
+
+        # Load the champion model in memory
+        self.model = load_champion_model(self.model_info, correlation_id)
+
+        # TODO : listen to a specific event for when a new model is 
+        #        upgraded to champion so that you can reload 
+        #        the champion model in memory
+
+        # TODO : on startup, check if all the data is labeled, 
+        #        otherwise use the champion model to label everything! 
+
+        # TODO : support configuration of what should happen on a predict_single call:
+        #        - support the possibility to not post the data to expenses but just get the prediction result
 
         # Event Consumers
         TotoEventConsumer(self.ms_name, ['erboh-predict-batch', 'erboh-predict-single', 'erboh-train'], [self.predict_batch, self.predict_single, self.train])
@@ -78,15 +111,15 @@ class ModelController:
         """
         Retrains the model 
         """
-        TrainingProcess(self.model_name, request).do()
+        self.model_delegate.train(self.model_info['name'], request)
 
-        return {"success": True, "message": "Model {} trained successfully".format(self.model_name)}
+        return {"success": True, "message": "Model {} trained successfully".format(self.model_info['name'])}
 
     def score(self, request): 
         """
         Calculate the accuracy (metrics) of the champion model
         """
-        metrics = ScoreProcess(self.model, request).do()
+        metrics = self.model_delegate.score(self.model_info, self.model, request.headers['x-correlation-id'])
 
         return {"metrics": metrics}
 
@@ -94,12 +127,12 @@ class ModelController:
         """
         Predicts on a single item
         """
-        predict_single(message, self.model)
+        self.model_delegate.predict_single(self.model, message)
     
     def predict_batch(self, message):
         """
         Predicts on a batch of items
         """
-        predict_batch(message, self.model)
+        self.model_delegate.predict_batch(self.model, message)
 
 

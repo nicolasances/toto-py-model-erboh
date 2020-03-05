@@ -7,7 +7,7 @@ logger = TotoLogger()
 
 class Predictor: 
 
-    def __init__(self, features_filename, predict_feature_names, cid, predict_only_labeled=False, model=None, save_to_folder=None):
+    def __init__(self, features_filename, predict_feature_names, cid, model, predict_only_labeled=False, save_to_folder=None):
         """
         Constructor
 
@@ -22,29 +22,15 @@ class Predictor:
         predict_feature_names (list) 
             The list of the features that HAVE TO BE CONSIDERED FOR PREDICTING
 
-        model (dict) default None
-            The model to use for the prediction. 
-            Dictionnary as returned by the Toto ML Registry GET /models/:name
-            If None is passed, the default local model is going to be used
-            The Dict must have: 
-            - name (string): name of the model to load
-            - version (int): version of the model to load
+        model (object) MANDATORY
+            The model pickle file to use for the prediction. 
         """
         self.correlation_id = cid
         self.features_filename = features_filename
         self.predict_only_labeled = predict_only_labeled
         self.predict_feature_names = predict_feature_names
         self.save_to_folder = save_to_folder
-
-        if model is not None: 
-            # Load the model
-            logger.compute(self.correlation_id, '[ PREDICTING ] - Loading model {model}.v{version} from storage for prediction.'.format(model=model['name'], version=model['version']),'info')
-
-            self.model = load_champion_model(model['name'], model['version'], self.correlation_id)
-        else:
-            logger.compute(self.correlation_id, '[ PREDICTING ] - No model passed. Using the local default.','info')
-
-            self.model = joblib.load('erboh.v1')
+        self.model = model
 
     def do(self): 
         """

@@ -15,23 +15,6 @@ from remote.expenses import update_expenses
 logger = TotoLogger()
 file_storage = FileStorage('model-erboh', 1)
 
-def predict(message, model):
-    '''
-    Processes the batch inference request message
-    '''
-    cid = 'no-cid'
-    try:
-        cid = message['correlationId']
-        user = message['user']
-
-        logger.compute(cid, "[ BATCH INFER EVENT LISTENER ] - Received a request to do batch inference for {}".format(user), 'info')
-
-        BatchPredictor(user, model, cid).do()
-
-    except KeyError as ke: 
-        logger.compute(cid, "Event {} is missing attributes. Got error: {}".format(message, ke),'error')
-    
-
 class BatchPredictor:
 
     def __init__(self, user, model, correlation_id):
