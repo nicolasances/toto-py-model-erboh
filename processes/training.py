@@ -1,7 +1,7 @@
 import os
 import uuid
 import pandas as pd
-from dlg.trainer import Trainer
+from dlg.trainer_nogrid import Trainer
 from dlg.history import HistoryDownloader
 from dlg.feature import FeatureEngineering
 from dlg.predictor import Predictor
@@ -14,9 +14,9 @@ logger = TotoLogger()
 
 class TrainingProcess: 
 
-    def __init__(self, model_name, message): 
+    def __init__(self, model_name, correltion_id): 
         self.user = 'all'
-        self.correlation_id = message['correlationId']
+        self.correlation_id = correltion_id
         self.model_name = model_name
 
     def do(self) : 
@@ -33,12 +33,12 @@ class TrainingProcess:
         (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, training=True).do(user=self.user)
 
         # 3. Training
-        trained_model = Trainer(features_filename, model_feature_names, self.correlation_id).do()
+        (trained_model, train_features_filename, test_features_filename) = Trainer(folder, features_filename, model_feature_names, self.correlation_id).do()
 
         # 4. Predict and score
-        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=trained_model).do()
+        (y_test_pred, y_test) = Predictor(test_features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=trained_model).do()
 
-        metrics = Scorer(self.correlation_id).do(y, y_pred)
+        metrics = Scorer(self.correlation_id).do(y_test, y_test_pred)
 
         # 5. Post the new model to TotoML Registry
         post_retrained_model(self.model_name, metrics, self.correlation_id)

@@ -1,12 +1,16 @@
 import datetime
 from random import randint
 from flask import Flask, jsonify, request, Response
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from toto_pubsub.consumer import TotoEventConsumer
 from toto_pubsub.publisher import TotoEventPublisher
+from toto_logger.logger import TotoLogger
 
-from remote.totoml_registry import check_registry
+from remote.totoml_registry import check_registry as align_registry
 from remote.gcpremote import init_champion_model, load_champion_model
+
+logger = TotoLogger()
 
 def cid(): 
     '''
@@ -24,7 +28,7 @@ class ModelController:
     regarding a model 
     """
 
-    def __init__(self, model_name, flask_app, model_delegate): 
+    def __init__(self, model_name, flask_app, model_delegate, config=None): 
         """
         Initializes the controller
 
@@ -42,6 +46,11 @@ class ModelController:
             - predict_batch()
             - score()
             - train()
+
+        config (dict)
+            A configuration object 
+            - train_cron (dict), optional a dictionnary with the following fields: hour, minute, second that 
+            set the periodicity for the training process
         """
 
         self.model_delegate = model_delegate
@@ -55,10 +64,10 @@ class ModelController:
 
         # Check if the model exists on the registry. 
         # If it does not, create it.
-        self.model_info = check_registry(self.model_name, correlation_id)
+        self.model_info = align_registry(self.model_name, correlation_id)
 
         # Check if there's a champion model (pickle file) published on GCP Storage
-        # If there's no model, upload the default model (local: erboh.v1)
+        # If there's no model, upload the default model (local)
         init_champion_model(self.model_info, correlation_id)
 
         # Load the champion model in memory
@@ -68,14 +77,21 @@ class ModelController:
         #        upgraded to champion so that you can reload 
         #        the champion model in memory
 
-        # TODO : support configuration of what should happen on a predict_single call:
-        #        - support the possibility to not post the data to expenses but just get the prediction result
-
         # Event Consumers
-        TotoEventConsumer(self.ms_name, ['erboh-predict-batch', 'erboh-predict-single', 'erboh-train'], [self.predict_batch, self.predict_single, self.train])
+        TotoEventConsumer(self.ms_name, ['{model}-predict-batch'.format(model=self.model_info['name']), '{model}-predict-single'.format(model=self.model_info['name']), '{model}-train'.format(model=self.model_info['name'])], [self.predict_batch, self.predict_single, self.train])
 
         # Event Publishers
-        self.publisher_model_train = TotoEventPublisher(microservice=self.ms_name, topics=['erboh-train'])
+        self.publisher_model_train = TotoEventPublisher(microservice=self.ms_name, topics=['{model}-train'.format(model=self.model_info['name'])])
+
+        # Schedule re-training, if requested
+        if config is not None and 'train_cron' in config: 
+            logger.compute(correlation_id, 'Starting a background scheduler for the /train process', 'info')
+
+            train_cron = config['train_cron']
+
+            self.scheduler = BackgroundScheduler()
+            self.scheduler.add_job(self.train, 'cron', hour=train_cron['hour'], minute=train_cron['minute'], second=train_cron['second'])
+            self.scheduler.start()
 
         # APIs
         @flask_app.route('/')
@@ -85,8 +101,12 @@ class ModelController:
         @flask_app.route('/train', methods=['POST'])
         def train(): 
 
+            # Topic to which the train message will be pushed
+            topic = '{model}-train'.format(model=self.model_info['name'])
+            event = {"correlationId": request.headers['x-correlation-id']}
+
             # Start the training
-            self.publisher_model_train.publish(topic='erboh-train', event={"correlationId": request.headers['x-correlation-id']})
+            self.publisher_model_train.publish(topic=topic, event=event)
 
             # Answer
             resp = jsonify({"message": "Training process started"})
@@ -103,12 +123,29 @@ class ModelController:
 
             return resp
 
+        @flask_app.route('/predict', methods=['POST'])
+        def predict(): 
 
-    def train(self, request): 
+            data = request.json
+            correlation_id = request.headers['x-correlation-id']
+
+            resp = jsonify(self.predict_single(data, correlation_id, online=True))
+            resp.status_code = 200
+            resp.headers['Content-Type'] = 'application/json'
+
+            return resp
+
+
+    def train(self, request=None): 
         """
         Retrains the model 
         """
-        self.model_delegate.train(self.model_info['name'], request)
+        correlation_id = cid()
+
+        if request is not None and 'correlationId' in request: 
+            correlation_id = request['correlationId']
+
+        self.model_delegate.train(self.model_info['name'], correlation_id)
 
         return {"success": True, "message": "Model {} trained successfully".format(self.model_info['name'])}
 
@@ -120,16 +157,26 @@ class ModelController:
 
         return {"metrics": metrics}
 
-    def predict_single(self, message):
+    def predict_single(self, data, correlation_id=None, online=False):
         """
         Predicts on a single item
         """
-        self.model_delegate.predict_single(self.model, message)
+        if correlation_id is None and 'correlationId' in data: 
+            correlation_id = data['correlationId']
+        else: 
+            correlation_id = cid()
+
+        return self.model_delegate.predict_single(self.model, data, correlation_id, online)
     
-    def predict_batch(self, message=None):
+    def predict_batch(self, data=None):
         """
         Predicts on a batch of items
         """
-        self.model_delegate.predict_batch(self.model, message)
+        if data is not None and 'correlationId' in data: 
+            correlation_id = data['correlationId']
+        else: 
+            correlation_id = cid()
+
+        self.model_delegate.predict_batch(self.model, correlation_id, data=data)
 
 

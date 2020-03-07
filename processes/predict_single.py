@@ -9,14 +9,14 @@ from dlg.predictor import Predictor
 from remote.expenses import update_expense
 from remote.gcpstorage import FileStorage
 
-file_storage = FileStorage('model-erboh', 1)
 logger = TotoLogger()
 
 class SinglePredictor: 
 
-    def __init__(self, model, correlation_id): 
+    def __init__(self, model, correlation_id, online): 
         self.correlation_id = correlation_id
         self.model = model
+        self.online = online
 
     def predict(self, expense_id, user, amount, category, description, date): 
         '''
@@ -40,14 +40,11 @@ class SinglePredictor:
         logger.compute(self.correlation_id, '[ PREDICT ] - Prediction: {}'.format(y_pred[0]), 'info')
 
         # 4. Post an update to the expense
-        update_expense({"id": expense_id, "monthly": y_pred[0]}, self.correlation_id)
-        
-        # 5. Update the predictions file
-        # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
+        if not self.online:
+            update_expense({"id": expense_id, "monthly": y_pred[0]}, self.correlation_id)
 
-        # file_storage.save_prediction_and_accuracy(prediction=expense, user=user)
-
-        # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
+        # Return the prediction
+        return {"expenseId": expense_id, "monthly": y_pred[0]}
 
 
 # {"correlationId": "202002121919219199", "id": "5d71e5adcb15b1191e7ba273", "amount": 699.9, "user": "nicolas.matteazzi@gmail.com", "category": "AUTO", "description": "Train", "date": "20190906"}

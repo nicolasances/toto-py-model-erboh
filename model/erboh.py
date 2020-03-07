@@ -24,39 +24,33 @@ def cid():
 
 class ModelDelegate: 
 
-    def predict_single(self, model, request): 
-
+    def predict_single(self, model, data, correlation_id, online=False): 
+        
         try: 
 
-            expense_id = request['id']
-            user = request['user']
-            category = request['category']
-            amount = request['amount']
-            description = request['description']
-            date = request['date'] 
-            cid = request['correlationId']
+            expense_id = data['id']
+            user = data['user']
+            category = data['category']
+            amount = data['amount']
+            description = data['description']
+            date = data['date'] 
 
-            SinglePredictor(model, cid).predict(expense_id, user, amount, category, description, date)
+            return SinglePredictor(model, correlation_id, online).predict(expense_id, user, amount, category, description, date)
         
         except KeyError as ke: 
-            logger.compute(cid, "[ PREDICTION LISTENER ] - Event {} has attributes missing. Got error: {}".format(request, ke), 'error')
+            logger.compute(correlation_id, "[ PREDICTION LISTENER ] - Event {} has attributes missing. Got error: {}".format(data, ke), 'error')
 
-    def predict_batch(self, model, request=None): 
+    def predict_batch(self, model, correlation_id, data=None): 
 
-        corrid = cid()
-        user = None
+        user = 'all'
+        if data is not None and "user" in data: 
+            user = data['user']
 
-        if request is not None: 
-            if 'correlationId' in request: 
-                corrid = request['correlationId']
-            if user in request: 
-                user = request['user']
+        BatchPredictor(model, correlation_id, user).do()
 
-        BatchPredictor(model, corrid, user).do()
+    def train(self, model_name, correlation_id): 
 
-    def train(self, model_name, request): 
-
-        TrainingProcess(model_name, request).do()
+        TrainingProcess(model_name, correlation_id).do()
 
     def score(self, model_info, model, cid):
 

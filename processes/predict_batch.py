@@ -13,7 +13,6 @@ from remote.gcpstorage import FileStorage
 from remote.expenses import update_expenses
 
 logger = TotoLogger()
-file_storage = FileStorage('model-erboh', 1)
 
 class BatchPredictor:
 
@@ -48,14 +47,5 @@ class BatchPredictor:
             return
 
         update_expenses(predictions_filename, self.correlation_id)
-
-        # 6. Save predictions to File Storage & recalc accuracy
-        # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Store the prediction', 'info')
-
-        # file_storage.save_predictions_and_accuracy(predictions_filename, self.user)
-
-        # logger.compute(self.correlation_id, '[ STEP 5 - STORE ] - Done!', 'info')
-
-        # return {"inferedRows": feature_engineering.count}
 
 # Example: {"user": "nicolas.matteazzi@gmail.com", "correlationId": "test-predict-batch"}

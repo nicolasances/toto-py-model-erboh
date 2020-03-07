@@ -12,6 +12,7 @@ RUN pip install uuid
 RUN pip install google-cloud-pubsub
 RUN pip install google-cloud-storage
 RUN pip install mlflow
+RUN pip install apscheduler
 
 COPY . /app/
 
