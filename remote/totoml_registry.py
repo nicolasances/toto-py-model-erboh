@@ -95,7 +95,7 @@ def put_champion_metrics(model_name, metrics, cid):
         A list [] of metrics object. 
         Each metric is a {name: <name>, value: <value>} object
     """
-    response = requests.put(
+    response = requests.post(
         'https://{host}/apis/totoml/registry/models/{model}/metrics'.format(host=toto_host, model=model_name),
         headers={
             'Accept': 'application/json',
@@ -107,7 +107,7 @@ def put_champion_metrics(model_name, metrics, cid):
         }
     )
 
-    if response.status_code != 200: 
+    if response.status_code != 201: 
         logger.compute(cid, 'Something went wrong when updating the metrics on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
 
     logger.compute(cid, '[ POSTING ] - Updated metrics of champion model', 'info')
