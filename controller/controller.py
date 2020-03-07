@@ -93,6 +93,16 @@ class ModelController:
             self.scheduler.add_job(self.train, 'cron', hour=train_cron['hour'], minute=train_cron['minute'], second=train_cron['second'])
             self.scheduler.start()
 
+        # Schedule scoring, if requested
+        if config is not None and 'score_cron' in config: 
+            logger.compute(correlation_id, 'Starting a background scheduler for the /score process', 'info')
+
+            score_cron = config['score_cron']
+
+            self.scheduler = BackgroundScheduler()
+            self.scheduler.add_job(self.score, 'cron', hour=score_cron['hour'], minute=score_cron['minute'], second=score_cron['second'])
+            self.scheduler.start()
+
         # APIs
         @flask_app.route('/')
         def smoke():
@@ -149,11 +159,16 @@ class ModelController:
 
         return {"success": True, "message": "Model {} trained successfully".format(self.model_info['name'])}
 
-    def score(self, request): 
+    def score(self, request=None): 
         """
         Calculate the accuracy (metrics) of the champion model
         """
-        metrics = self.model_delegate.score(self.model_info, self.model, request.headers['x-correlation-id'])
+        correlation_id = cid()
+
+        if request is not None and 'x-correlation-id' in request.headers: 
+            correlation_id = request.headers['x-correlation-id']
+        
+        metrics = self.model_delegate.score(self.model_info, self.model, correlation_id)
 
         return {"metrics": metrics}
 
