@@ -1,5 +1,7 @@
 import os
 import uuid
+import datetime
+from random import randint
 
 from toto_logger.logger import TotoLogger
 
@@ -9,6 +11,16 @@ from processes.training import TrainingProcess
 from processes.scoring import ScoreProcess
 
 logger = TotoLogger()
+
+def cid(): 
+    '''
+    Generates a Toto-valid Correlation ID
+    Example: 20200229160021694-09776
+    '''
+    datepart = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+    randpart = str(randint(0, 100000)).zfill(5)
+
+    return '{date}-{rand}'.format(date=datepart, rand=randpart)
 
 class ModelDelegate: 
 
@@ -29,16 +41,18 @@ class ModelDelegate:
         except KeyError as ke: 
             logger.compute(cid, "[ PREDICTION LISTENER ] - Event {} has attributes missing. Got error: {}".format(request, ke), 'error')
 
-    def predict_batch(self, model, request): 
+    def predict_batch(self, model, request=None): 
 
-        try:
-            cid = request['correlationId']
-            user = request['user']
+        corrid = cid()
+        user = None
 
-            BatchPredictor(user, model, cid).do()
+        if request is not None: 
+            if 'correlationId' in request: 
+                corrid = request['correlationId']
+            if user in request: 
+                user = request['user']
 
-        except KeyError as ke: 
-            logger.compute(cid, "[ BATCH INFER ] - Event {} is missing attributes. Got error: {}".format(request, ke),'error')
+        BatchPredictor(model, corrid, user).do()
 
     def train(self, model_name, request): 
 

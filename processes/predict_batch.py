@@ -17,13 +17,16 @@ file_storage = FileStorage('model-erboh', 1)
 
 class BatchPredictor:
 
-    def __init__(self, user, model, correlation_id):
+    def __init__(self, model, correlation_id, user=None):
         '''
         user: user email
         '''
         self.user = user
         self.correlation_id = correlation_id
         self.model = model
+
+        if self.user == None:
+            self.user = 'all'
 
     def do(self):
 

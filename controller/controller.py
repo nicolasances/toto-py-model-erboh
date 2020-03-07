@@ -68,9 +68,6 @@ class ModelController:
         #        upgraded to champion so that you can reload 
         #        the champion model in memory
 
-        # TODO : on startup, check if all the data is labeled, 
-        #        otherwise use the champion model to label everything! 
-
         # TODO : support configuration of what should happen on a predict_single call:
         #        - support the possibility to not post the data to expenses but just get the prediction result
 
@@ -129,7 +126,7 @@ class ModelController:
         """
         self.model_delegate.predict_single(self.model, message)
     
-    def predict_batch(self, message):
+    def predict_batch(self, message=None):
         """
         Predicts on a batch of items
         """
