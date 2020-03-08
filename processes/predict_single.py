@@ -44,7 +44,7 @@ class SinglePredictor:
             update_expense({"id": expense_id, "monthly": y_pred[0]}, self.correlation_id)
 
         # Return the prediction
-        return {"expenseId": expense_id, "monthly": y_pred[0]}
+        return {"expenseId": expense_id, "monthly": int(y_pred[0])}
 
 
 # {"correlationId": "202002121919219199", "id": "5d71e5adcb15b1191e7ba273", "amount": 699.9, "user": "nicolas.matteazzi@gmail.com", "category": "AUTO", "description": "Train", "date": "20190906"}
