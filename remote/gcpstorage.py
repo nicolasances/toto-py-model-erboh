@@ -7,7 +7,7 @@ from google.api_core.exceptions import NotFound
 from toto_logger.logger import TotoLogger
 from sklearn.metrics import precision_recall_fscore_support
 
-client = storage.Client.from_service_account_json('/Users/nicolas/Developper/keys/toto-service-account-dev/toto-microservice-dev.json')
+client = storage.Client()
 
 toto_env = os.environ['TOTO_ENV']
 
