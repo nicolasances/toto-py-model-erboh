@@ -83,26 +83,6 @@ class ModelController:
         # Event Publishers
         self.publisher_model_train = TotoEventPublisher(microservice=self.ms_name, topics=['{model}-train'.format(model=self.model_info['name'])])
 
-        # Schedule re-training, if requested
-        if config is not None and 'train_cron' in config: 
-            logger.compute(correlation_id, 'Starting a background scheduler for the /train process', 'info')
-
-            train_cron = config['train_cron']
-
-            self.scheduler = BackgroundScheduler()
-            self.scheduler.add_job(self.train, 'cron', hour=train_cron['hour'], minute=train_cron['minute'], second=train_cron['second'])
-            self.scheduler.start()
-
-        # Schedule scoring, if requested
-        if config is not None and 'score_cron' in config: 
-            logger.compute(correlation_id, 'Starting a background scheduler for the /score process', 'info')
-
-            score_cron = config['score_cron']
-
-            self.scheduler = BackgroundScheduler()
-            self.scheduler.add_job(self.score, 'cron', hour=score_cron['hour'], minute=score_cron['minute'], second=score_cron['second'])
-            self.scheduler.start()
-
         # APIs
         @flask_app.route('/')
         def smoke():
