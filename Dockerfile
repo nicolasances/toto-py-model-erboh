@@ -20,4 +20,4 @@ WORKDIR /app/
 ENV TOTO_TMP_FOLDER=/modeltmp
 ENV PYTHONUNBUFFERED=TRUE
 
-CMD gunicorn --bind 0.0.0.0:8080 wsgi:app --enable-stdio-inheritance --timeout 3600 --workers=5
+CMD gunicorn --bind 0.0.0.0:8080 wsgi:app --enable-stdio-inheritance --timeout 3600
