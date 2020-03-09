@@ -84,6 +84,7 @@ class HistoryDownloader:
         try: 
             df = df[['id', 'amount', 'category', 'date', 'description', 'monthly', 'yearMonth', 'user']]
         except KeyError: 
+            logger.compute(self.correlation_id, '[ HISTORICAL ] - No "monthly" field found in the response! Skipping it!', 'warn')
             df = df[['id', 'amount', 'category', 'date', 'description', 'yearMonth', 'user']]
 
         # Generate a new yearMonth column
