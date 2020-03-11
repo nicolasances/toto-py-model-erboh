@@ -23,6 +23,7 @@ class BatchPredictor:
         self.user = user
         self.correlation_id = correlation_id
         self.model = model
+        self.context = 'PREDICTION (BATCH)'
 
         if self.user == None:
             self.user = 'all'
@@ -34,18 +35,18 @@ class BatchPredictor:
         os.makedirs(name=folder, exist_ok=True)
 
         # 1. Download all history
-        history_filename = HistoryDownloader(folder, self.correlation_id).download(user=self.user)
+        history_filename = HistoryDownloader(folder, self.correlation_id, context=self.context).download(user=self.user)
 
         # 2. Build Features for historical data
-        (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id).do(user=self.user)
+        (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, context=self.context).do(user=self.user)
 
         # 3. Load the model and predict
-        (y_pred, y, predictions_filename) = Predictor(features_filename, model_feature_names, self.correlation_id, save_to_folder=folder, model=self.model).do()
+        (y_pred, y, predictions_filename) = Predictor(features_filename, model_feature_names, self.correlation_id, save_to_folder=folder, model=self.model, context=self.context).do()
 
         # 5. For each prediction, update the expense (asynchronously)
         if y_pred is None: 
             return
 
-        update_expenses(predictions_filename, self.correlation_id)
+        update_expenses(predictions_filename, self.correlation_id, context=self.context)
 
 # Example: {"user": "nicolas.matteazzi@gmail.com", "correlationId": "test-predict-batch"}

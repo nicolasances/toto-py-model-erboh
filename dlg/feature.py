@@ -179,7 +179,7 @@ def category_dummies(cat):
 
 class FeatureEngineering: 
 
-    def __init__(self, folder, data_file, correlation_id, training=False):
+    def __init__(self, folder, data_file, correlation_id, training=False, context=''):
         self.data_file = data_file
         self.folder = folder
         self.model_feature_names = None
@@ -187,10 +187,11 @@ class FeatureEngineering:
         self.count = 0
         self.training = training
         self.correlation_id = correlation_id
+        self.context = context
 
     def do(self, user): 
 
-        logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - Starting feature engineering', 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ FEATURE ENGINEERING ] - Starting feature engineering'.format(context=self.context), 'info')
 
         output_file_name = '{folder}/features.{user}.csv'.format(user=user, folder=self.folder);
 
@@ -212,7 +213,7 @@ class FeatureEngineering:
 
         if features.empty:
             self.empty = True
-            logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - No rows to process.', 'warn')
+            logger.compute(self.correlation_id, '[ {context} ] - [ FEATURE ENGINEERING ] - No rows to process.'.format(context=self.context), 'warn')
             return (None, None)
 
         # Finally: create dummies for the category
@@ -238,8 +239,8 @@ class FeatureEngineering:
         # Save additional data
         self.count = len(features)
 
-        logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - Features engineered successfully', 'info')
-        logger.compute(self.correlation_id, '[ FEATURE ENGINEERING ] - # of rows: {}'.format(self.count), 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ FEATURE ENGINEERING ] - Features engineered successfully'.format(context=self.context), 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ FEATURE ENGINEERING ] - # of rows: {r}'.format(context=self.context, r=self.count), 'info')
 
         return (self.model_feature_names, output_file_name)
 

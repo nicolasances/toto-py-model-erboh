@@ -8,12 +8,12 @@ publisher = TotoEventPublisher(microservice='model-erboh', topics=['expenseUpdat
 
 logger = TotoLogger()
 
-def update_expense(expense, correlation_id): 
+def update_expense(expense, correlation_id, context=''): 
     """
     This method updates a single expense
     It updates the "monthly" property of the expense
     """
-    logger.compute(correlation_id, '[ UPDATE ] - Updating payment with prediction', 'info')
+    logger.compute(correlation_id, '[ {context} ] - [ UPDATE ] - Updating payment with prediction'.format(context=context), 'info')
 
     id = expense['id']
 
@@ -32,9 +32,9 @@ def update_expense(expense, correlation_id):
     # Post the expense to the update queue
     publisher.publish(topic='expenseUpdateRequested', event=msg)
 
-    logger.compute(correlation_id, '[ UPDATE ] - Payment updated', 'info')
+    logger.compute(correlation_id, '[ {context} ] - [ UPDATE ] - Payment updated'.format(context=context), 'info')
 
-def update_expenses(predictions_filename, correlation_id): 
+def update_expenses(predictions_filename, correlation_id, context=''): 
     """
     This method updates multiple expenses
     The input is a predictions filename
@@ -42,7 +42,7 @@ def update_expenses(predictions_filename, correlation_id):
     # Load the predictions
     predictions = pd.read_csv(predictions_filename)
 
-    logger.compute(correlation_id, '[ UPDATE ] - Updating {} payments with predictions'.format(len(predictions)), 'info')
+    logger.compute(correlation_id, '[ {context} ] - [ UPDATE ] - Updating {r} payments with predictions'.format(context=context, r=len(predictions)), 'info')
 
     for index, row in predictions.iterrows():
         id = row['id']
@@ -61,5 +61,5 @@ def update_expenses(predictions_filename, correlation_id):
         # Post the expense to the update queue
         publisher.publish(topic='expenseUpdateRequested', event=msg)
 
-    logger.compute(correlation_id, '[ UPDATE ] - Payments updated', 'info')
+    logger.compute(correlation_id, '[ {context} ] - [ UPDATE ] - Payments updated'.format(context=context), 'info')
     

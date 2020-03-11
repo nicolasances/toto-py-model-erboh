@@ -7,7 +7,7 @@ logger = TotoLogger()
 
 class Predictor: 
 
-    def __init__(self, features_filename, predict_feature_names, cid, model, predict_only_labeled=False, save_to_folder=None):
+    def __init__(self, features_filename, predict_feature_names, cid, model, predict_only_labeled=False, save_to_folder=None, context=''):
         """
         Constructor
 
@@ -31,6 +31,7 @@ class Predictor:
         self.predict_feature_names = predict_feature_names
         self.save_to_folder = save_to_folder
         self.model = model
+        self.context = context
 
     def do(self): 
         """
@@ -53,10 +54,10 @@ class Predictor:
                 features['monthly'] = features['monthly'].apply(lambda x : int(x == True))
 
         except:
-            logger.compute(self.correlation_id, '[ PREDICTING ] - Problem reading file {}. Stopping'.format(self.features_filename), 'error')
+            logger.compute(self.correlation_id, '[ {context} ] - [ PREDICTING ] - Problem reading file {f}. Stopping'.format(context=self.context, f=self.features_filename), 'error')
             return (None, None, None)
 
-        logger.compute(self.correlation_id, '[ PREDICTING ] - Predicting on {} rows'.format(len(features)),'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ PREDICTING ] - Predicting on {r} rows'.format(context=self.context, r=len(features)),'info')
 
         X = features[self.predict_feature_names]
 
@@ -66,7 +67,7 @@ class Predictor:
 
         y_pred = self.model.predict(X)
 
-        logger.compute(self.correlation_id, '[ PREDICTING ] - Prediction completed. Generated {} predictions'.format(len(y_pred)),'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ PREDICTING ] - Prediction completed. Generated {p} predictions'.format(context=self.context, p=len(y_pred)),'info')
 
         if self.save_to_folder != None:
             # Save to file
@@ -75,7 +76,7 @@ class Predictor:
             features['occurs_monthly'] = y_pred
             features.to_csv(predictions_filename)
 
-            logger.compute(self.correlation_id, '[ PREDICTING ] - Predictions saved on disk: {}'.format(predictions_filename), 'info')
+            logger.compute(self.correlation_id, '[ {context} ] - [ PREDICTING ] - Predictions saved on disk: {f}'.format(context=self.context, f=predictions_filename), 'info')
 
             return (y_pred, y, predictions_filename)
 

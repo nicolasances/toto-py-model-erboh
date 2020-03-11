@@ -18,6 +18,7 @@ class TrainingProcess:
         self.user = 'all'
         self.correlation_id = correltion_id
         self.model_name = model_name
+        self.context = 'TRAINING'
 
     def do(self) : 
 
@@ -26,25 +27,25 @@ class TrainingProcess:
         os.makedirs(name=folder, exist_ok=True)
 
         # 1. Download all history
-        history_filename = HistoryDownloader(folder, self.correlation_id).download(user=self.user)
+        history_filename = HistoryDownloader(folder, self.correlation_id, context=self.context).download(user=self.user)
 
         # 2. Engineer features
         # TRAINING = TRUE because we want to keep the "monthly" column 
-        (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, training=True).do(user=self.user)
+        (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, training=True, context=self.context).do(user=self.user)
 
         # 3. Training
-        (trained_model, train_features_filename, test_features_filename) = Trainer(folder, features_filename, model_feature_names, self.correlation_id).do()
+        (trained_model, train_features_filename, test_features_filename) = Trainer(folder, features_filename, model_feature_names, self.correlation_id, context=self.context).do()
 
         # 4. Predict and score
-        (y_test_pred, y_test) = Predictor(test_features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=trained_model).do()
+        (y_test_pred, y_test) = Predictor(test_features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=trained_model, context=self.context).do()
 
-        metrics = Scorer(self.correlation_id).do(y_test, y_test_pred)
+        metrics = Scorer(self.correlation_id, context=self.context).do(y_test, y_test_pred)
 
         # 5. Post the new model to TotoML Registry
-        post_retrained_model(self.model_name, metrics, self.correlation_id)
+        post_retrained_model(self.model_name, metrics, self.correlation_id, context=self.context)
 
         # 6. Save the pickle file to Storage
-        save_retrained_model_pickle(self.model_name, trained_model)
+        save_retrained_model_pickle(self.model_name, trained_model, context=self.context)
 
 
 

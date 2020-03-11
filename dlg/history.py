@@ -15,9 +15,10 @@ logger = TotoLogger()
 
 class HistoryDownloader: 
 
-    def __init__(self, folder, correlation_id): 
+    def __init__(self, folder, correlation_id, context=''): 
         self.correlation_id = correlation_id
         self.folder = folder
+        self.context = context
 
     def download_from(self, user, num_months, from_date): 
         """
@@ -49,7 +50,7 @@ class HistoryDownloader:
         engineer the data to infer
         '''
 
-        logger.compute(self.correlation_id, '[ HISTORICAL ] - Starting historical data download from date {date}'.format(date=dateGte), 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - Starting historical data download from date {date}'.format(context=self.context, date=dateGte), 'info')
 
         history_filename = '{folder}/history.{user}.csv'.format(user=user, folder=self.folder);
 
@@ -70,21 +71,21 @@ class HistoryDownloader:
         try: 
             expenses = json_response['expenses']
         except: 
-            logger.compute(self.correlation_id, '[ HISTORICAL ] - Error reading the following microservice response: {}'.format(json_response), 'error')
-            logger.compute(self.correlation_id, '[ HISTORICAL ] - No historical data', 'warn')
+            logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - Error reading the following microservice response: {r}'.format(context=self.context, r=json_response), 'error')
+            logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - No historical data'.format(context=self.context), 'warn')
             return None
 
         # Create a pandas data frame
         df = json_normalize(expenses)
 
         if df.empty: 
-            logger.compute(self.correlation_id, '[ HISTORICAL ] - No historical data', 'warn')
+            logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - No historical data',format(context=self.context), 'warn')
             return None
         
         try: 
             df = df[['id', 'amount', 'category', 'date', 'description', 'monthly', 'yearMonth', 'user']]
         except KeyError: 
-            logger.compute(self.correlation_id, '[ HISTORICAL ] - No "monthly" field found in the response! Skipping it!', 'warn')
+            logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - No "monthly" field found in the response! Skipping it!'.format(context=self.context)), 'warn')
             df = df[['id', 'amount', 'category', 'date', 'description', 'yearMonth', 'user']]
 
         # Generate a new yearMonth column
@@ -96,7 +97,7 @@ class HistoryDownloader:
         # Save the dataframe
         df.to_csv(history_filename) 
 
-        logger.compute(self.correlation_id, '[ HISTORICAL ] - Historical data downloaded: {} rows'.format(len(df)), 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - Historical data downloaded: {r} rows'.format(context=self.context, r=len(df)), 'info')
 
         # Return the filename
         return history_filename
@@ -105,7 +106,7 @@ class HistoryDownloader:
         """
         Appends the provided expense to the downloaded history file
         """
-        logger.compute(self.correlation_id, '[ HISTORICAL ] - Appending expense to historical data.', 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - Appending expense to historical data.'.format(context=self.context), 'info')
 
         history_filename = '{folder}/history.{user}.csv'.format(user=user, folder=self.folder);
 

@@ -36,6 +36,7 @@ class ScoreProcess:
         self.model_version = model_info['version']
         self.model_info = model_info
         self.model = model
+        self.context = 'SCORING'
 
     def do(self): 
         """
@@ -48,20 +49,20 @@ class ScoreProcess:
         os.makedirs(name=folder, exist_ok=True)
 
         # 1. Download the historical data
-        history_filename = HistoryDownloader(folder, self.correlation_id).download(user=self.user)
+        history_filename = HistoryDownloader(folder, self.correlation_id, context=self.context).download(user=self.user)
 
         # 2. Engineer features
         # TRAINING = TRUE because we want to keep the "monthly" column 
-        (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, training=True).do(user=self.user)
+        (model_feature_names, features_filename) = FeatureEngineering(folder, history_filename, self.correlation_id, training=True, context=self.context).do(user=self.user)
 
         # 3. Predict on features
-        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=self.model).do()
+        (y_pred, y) = Predictor(features_filename, model_feature_names, self.correlation_id, predict_only_labeled=True, model=self.model, context=self.context).do()
 
         # 4. Calculate accuracy
-        metrics = Scorer(self.correlation_id).do(y, y_pred)
+        metrics = Scorer(self.correlation_id, context=self.context).do(y, y_pred)
 
         # 5. Post metrics
-        put_champion_metrics(self.model_name, metrics, self.correlation_id)
+        put_champion_metrics(self.model_name, metrics, self.correlation_id, context=self.context)
 
         return metrics
 

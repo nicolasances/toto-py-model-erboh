@@ -6,8 +6,9 @@ logger = TotoLogger();
 
 class Scorer: 
 
-    def __init__(self, cid): 
+    def __init__(self, cid, context=''): 
         self.correlation_id = cid
+        self.context = context
     
     def do(self, y, y_pred): 
 
@@ -21,9 +22,9 @@ class Scorer:
 
         f1 = f1_score(y, y_pred)
 
-        logger.compute(self.correlation_id, '[ SCORING ] - Precision Class 1: {}'.format(acc_df.loc['Precision', 'Class 1']),'info')
-        logger.compute(self.correlation_id, '[ SCORING ] - Recall Class 1: {}'.format(acc_df.loc['Recall', 'Class 1']),'info')
-        logger.compute(self.correlation_id, '[ SCORING ] - F1 score: {}'.format(f1),'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ SCORING ] - Precision Class 1: {v}'.format(context=self.context, v=acc_df.loc['Precision', 'Class 1']),'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ SCORING ] - Recall Class 1: {v}'.format(context=self.context, v=acc_df.loc['Recall', 'Class 1']),'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ SCORING ] - F1 score: {v}'.format(context=self.context, v=f1),'info')
 
         return [
             {"name": "Precision Class 1", "value": acc_df.loc['Precision', 'Class 1']},

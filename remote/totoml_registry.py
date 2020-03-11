@@ -58,7 +58,7 @@ def check_registry(model_name, correlation_id):
         return model
 
 
-def post_retrained_model(model_name, metrics, corr_id): 
+def post_retrained_model(model_name, metrics, corr_id, context=''): 
     """
     Posts a new retrained model to Toto ML Registry for a given model
     """
@@ -76,13 +76,13 @@ def post_retrained_model(model_name, metrics, corr_id):
     )
 
     if response.status_code != 201: 
-        logger.compute(corr_id, 'Something went wrong when creating a new retrained model on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
+        logger.compute(corr_id, '[ {context} ] - [ POSTING ] - Something went wrong when creating a new retrained model on Toto ML Model Registry for model {model}. Response: {content}'.format(context=context, model=model_name, content=response.content), 'error')
 
-    logger.compute(corr_id, '[ POSTING ] - Posted retrained model', 'info')
+    logger.compute(corr_id, '[ {context} ] - [ POSTING ] - Posted retrained model'.format(context=context), 'info')
 
     return
 
-def put_champion_metrics(model_name, metrics, cid): 
+def put_champion_metrics(model_name, metrics, cid, context=''): 
     """
     Updates the metrics of the chamption model 
 
@@ -108,9 +108,9 @@ def put_champion_metrics(model_name, metrics, cid):
     )
 
     if response.status_code != 201: 
-        logger.compute(cid, 'Something went wrong when updating the metrics on Toto ML Model Registry for model {model}. Response: {content}'.format(model=model_name, content=response.content), 'error')
+        logger.compute(cid, '[ {context} ] - [ POSTING ] - Something went wrong when updating the metrics on Toto ML Model Registry for model {model}. Response: {content}'.format(context=context, model=model_name, content=response.content), 'error')
 
-    logger.compute(cid, '[ POSTING ] - Updated metrics of champion model', 'info')
+    logger.compute(cid, '[ {context} ] - [ POSTING ] - Updated metrics of champion model'.format(context=context), 'info')
 
     return 
 

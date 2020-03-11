@@ -16,7 +16,7 @@ os.makedirs(name=base_folder, exist_ok=True)
 
 logger = TotoLogger()
 
-def save_retrained_model_pickle(model_name, model_object):
+def save_retrained_model_pickle(model_name, model_object, context=''):
     """
     Saves the pickle file of the retrained model
     """
@@ -24,7 +24,7 @@ def save_retrained_model_pickle(model_name, model_object):
     try:
         bucket = client.get_bucket(bucket_name)
     except NotFound: 
-        logger.compute('no-id', 'Bucket {} not found. Please create it first'.format(bucket_name), 'error')
+        logger.compute('no-id', '[ {context} ] - [ SAVING ] - Bucket {b} not found. Please create it first'.format(context=context, b=bucket_name), 'error')
         return
 
     # Store the model on a tmp file

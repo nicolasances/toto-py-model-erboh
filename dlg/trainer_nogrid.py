@@ -8,15 +8,16 @@ logger = TotoLogger()
 
 class Trainer: 
 
-    def __init__(self, folder, features_filename, model_feature_names, cid):
+    def __init__(self, folder, features_filename, model_feature_names, cid, context=''):
         self.features_filename = features_filename
         self.correlation_id = cid
         self.model_feature_names = model_feature_names
         self.folder = folder
+        self.context = context
 
     def do(self): 
         
-        logger.compute(self.correlation_id, '[ TRAINING ] - Starting training on historical data', 'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ TRAINING ] - Starting training on historical data'.format(context=self.context), 'info')
 
         try: 
             features = pd.read_csv(self.features_filename)
@@ -28,10 +29,10 @@ class Trainer:
             features['monthly'] = features['monthly'].apply(lambda x : int(x == True))
 
         except: 
-            logger.compute(self.correlation_id, '[ TRAINING ] - Problem reading file {}. Stopping'.format(self.features_filename), 'error')
+            logger.compute(self.correlation_id, '[ {context} ] - [ TRAINING ] - Problem reading file {f}. Stopping'.format(context=self.context, f=self.features_filename), 'error')
             return
 
-        logger.compute(self.correlation_id, '[ TRAINING ] - Training on {} rows'.format(len(features)),'info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ TRAINING ] - Training on {r} rows'.format(context=self.context, r=len(features)),'info')
 
         X = features[self.model_feature_names]
         y = features['monthly']
@@ -55,7 +56,7 @@ class Trainer:
         best_nn = MLPClassifier(hidden_layer_sizes=(5, 5), activation='identity', alpha=0.1, max_iter=1000)
         best_nn.fit(X_train, y_train)
 
-        logger.compute(self.correlation_id, '[ TRAINING ] - Model trained.','info')
+        logger.compute(self.correlation_id, '[ {context} ] - [ TRAINING ] - Model trained.'.format(context=self.context),'info')
 
         # Return the model and the split features files
         return (best_nn, train_filename, test_filename)
