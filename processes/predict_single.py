@@ -42,7 +42,7 @@ class SinglePredictor:
 
         # 4. Post an update to the expense
         if not self.online:
-            update_expense({"id": expense_id, "monthly": y_pred[0], context=self.context}, self.correlation_id)
+            update_expense({"id": expense_id, "monthly": y_pred[0]}, self.correlation_id, context=self.context)
 
         # Return the prediction
         return {"expenseId": expense_id, "monthly": int(y_pred[0])}
