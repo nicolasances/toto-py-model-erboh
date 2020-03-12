@@ -79,7 +79,7 @@ class HistoryDownloader:
         df = json_normalize(expenses)
 
         if df.empty: 
-            logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - No historical data',format(context=self.context), 'warn')
+            logger.compute(self.correlation_id, '[ {context} ] - [ HISTORICAL ] - No historical data'.format(context=self.context), 'warn')
             return None
         
         try: 
