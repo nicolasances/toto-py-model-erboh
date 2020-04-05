@@ -1,7 +1,7 @@
 import pandas as pd
 import joblib
+
 from toto_logger.logger import TotoLogger
-from remote.gcpremote import load_champion_model
 
 logger = TotoLogger()
 

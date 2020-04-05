@@ -1,59 +1,44 @@
-import os
-import uuid
-import datetime
-from random import randint
+# from processes.predict_single import SinglePredictor
+# from processes.predict_batch import BatchPredictor
+# from processes.training import TrainingProcess
+# from processes.scoring import ScoreProcess
+from totoml.delegate import ModelDelegate
+from totoml.model import ModelType
+
+from model.train import TrainingProcess
+from model.predict import SinglePredictor
+from model.predict_batch import BatchPredictor
+from model.score import ScoreProcess
 
 from toto_logger.logger import TotoLogger
 
-from processes.predict_single import SinglePredictor
-from processes.predict_batch import BatchPredictor
-from processes.training import TrainingProcess
-from processes.scoring import ScoreProcess
-
 logger = TotoLogger()
 
-def cid(): 
-    '''
-    Generates a Toto-valid Correlation ID
-    Example: 20200229160021694-09776
-    '''
-    datepart = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-    randpart = str(randint(0, 100000)).zfill(5)
+class ERBOH: 
 
-    return '{date}-{rand}'.format(date=datepart, rand=randpart)
+    def __init__(self):
+        pass
 
-class ModelDelegate: 
+    def get_model_type(self):
+        return ModelType.sklearn
 
-    def predict_single(self, model, data, correlation_id, online=False): 
-        
-        try: 
+    def get_name(self): 
+        return "erboh"
 
-            expense_id = data['id']
-            user = data['user']
-            category = data['category']
-            amount = data['amount']
-            description = data['description']
-            date = data['date'] 
+    def predict(self, model, context, data): 
 
-            return SinglePredictor(model, correlation_id, online).predict(expense_id, user, amount, category, description, date)
-        
-        except KeyError as ke: 
-            logger.compute(correlation_id, "[ PREDICTION LISTENER ] - Event {} has attributes missing. Got error: {}".format(data, ke), 'error')
+        return SinglePredictor().predict(model, context, data)
 
-    def predict_batch(self, model, correlation_id, data=None): 
+    def predict_batch(self, model, context, data=None): 
 
-        user = 'all'
-        if data is not None and "user" in data: 
-            user = data['user']
+        return BatchPredictor().predict(model, context, data)
 
-        BatchPredictor(model, correlation_id, user).do()
+    def train(self, model_info, context):
 
-    def train(self, model_name, correlation_id): 
+        return TrainingProcess().train(model_info, context)
 
-        TrainingProcess(model_name, correlation_id).do()
+    def score(self, model, context):
 
-    def score(self, model_info, model, cid):
-
-        return ScoreProcess(model_info, model, cid).do()
+        return ScoreProcess().score(model, context)        
 
         

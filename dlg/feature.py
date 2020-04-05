@@ -2,12 +2,13 @@
 import re
 import numpy as np
 import pandas as pd
-from toto_logger.logger import TotoLogger
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from datetime import datetime as dt, timedelta
 from sklearn.metrics import f1_score, confusion_matrix, classification_report
+
+from toto_logger.logger import TotoLogger
 
 pd.options.mode.chained_assignment = None
 
