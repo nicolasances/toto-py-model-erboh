@@ -11,7 +11,7 @@ RUN pip install requests
 RUN pip install uuid
 RUN pip install google-cloud-pubsub
 RUN pip install google-cloud-storage
-RUN pip install --upgrade totoml
+RUN pip install totoml=2.2.0
 
 COPY . /app/
 
