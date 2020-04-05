@@ -11,7 +11,7 @@ RUN pip install requests
 RUN pip install uuid
 RUN pip install google-cloud-pubsub
 RUN pip install google-cloud-storage
-RUN pip install apscheduler
+RUN pip install totoml
 
 COPY . /app/
 
